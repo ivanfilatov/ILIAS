@@ -384,7 +384,7 @@ class ilPublicUserProfileGUI
 		{
 			$tpl->setCurrentBlock("link");
 			if($lng->lang_key == "ru") {$tpl->setVariable("TXT_LINK", "Редактировать профиль");} else {$tpl->setVariable("TXT_LINK", "Edit Profile");}
-			$tpl->setVariable("HREF_LINK", "ilias.php?ref_id=7&admin_mode=settings&obj_id=".$user->getId()."&cmd=view&cmdClass=ilobjusergui&cmdNode=wz:31&baseClass=ilAdministrationGUI");
+			$tpl->setVariable("HREF_LINK", "ilias.php?ref_id=7&admin_mode=settings&obj_id=".$user->getId()."&cmd=view&cmdClass=ilobjusergui&cmdNode=1t:aw&baseClass=ilAdministrationGUI");
 		}
 		
 		// CHANGES IN CORE @author Ivan Filatov 05 aug 2015
