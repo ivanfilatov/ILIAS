@@ -140,6 +140,118 @@ class ilObjMailGUI extends ilObjectGUI
 		$this->form->addCommandButton('save', $this->lng->txt('save'));
 	}
 	
+	// CHANGES IN CORE
+	// function for reading gz logs from logrotate
+	public function gz_get_contents($path)
+	{
+	    // gzread needs the uncompressed file size as a second argument
+	    // this might be done by reading the last bytes of the file
+	    $handle = fopen($path, "rb");
+	    fseek($handle, -4, SEEK_END);
+	    $buf = fread($handle, 4);
+	    $unpacked = unpack("V", $buf);
+	    $uncompressedSize = end($unpacked);
+	    fclose($handle);
+	
+	    // read the gzipped content, specifying the exact length
+	    $handle = gzopen($path, "rb");
+	    $contents = @gzread($handle, $uncompressedSize);
+	    gzclose($handle);
+	
+	    return $contents;
+	}
+	
+	// log data tab
+	public function logsObject()
+	{
+		global $ilAccess, $log;
+		
+		if(!$ilAccess->checkAccess('write,read', '', $this->object->getRefId()))
+		{
+			$this->ilias->raiseError($this->lng->txt('msg_no_perm_write'), $this->ilias->error_obj->WARNING);
+		}
+		
+		$this->logForm();
+		$dateselect = $this->form->getHTML();
+		
+		$selected_log = "mailing.log";
+		if(isset($_POST['log_date']))
+		{
+			$this->form->checkInput();
+			$tmp_date = explode("-", $this->form->getInput('log_date')['date']);
+			$selected_log = "mailing.log-".$tmp_date[0].$tmp_date[1].$tmp_date[2].".gz";
+		}
+		
+		if(stripos($selected_log, ".gz") !== false) {$logfile = $this->gz_get_contents("/var/icef-info/mailings/".$selected_log);}
+		else {$logfile = file_get_contents("/var/icef-info/mailings/".$selected_log);}
+		
+		$logfile = str_replace("\n", "<br />", $logfile);
+		
+		include_once('./Services/Table/classes/class.ilTable2GUI.php');
+		$logtable = new ilTable2GUI($this);
+		$logtable->setRowTemplate('tpl.mail_logrow.html', 'Services/Mail');
+		
+		$logtable->addColumn($this->lng->txt('time'), 'time', '5%');
+		$logtable->addColumn($this->lng->txt('mail_filter_sender'), 'author', '10%');
+		$logtable->addColumn($this->lng->txt('mail_filter_recipients'), 'recipients', '15%');
+		$logtable->addColumn($this->lng->txt('mail_filter_subject'), 'subject', '20%');
+		$logtable->addColumn($this->lng->txt('mail_filter_body'), 'text', '50%');
+		
+		$logcontentarray = split("<br />=====================<br /><br />", $logfile);
+		
+		$counter = 0;
+		foreach($logcontentarray as $logmsg)
+		{
+			if(stripos($logmsg,"Message:<br />") === false && stripos($logmsg,"Message:") !== false) {$logmsg = str_replace("Message:", "Message:<br />", $logmsg);}
+			if(stripos($logmsg,"Message:<br /><br />") !== false) {$logmsg = str_replace("Message:<br /><br />", "Message:<br />", $logmsg);}
+			
+			preg_match('/Originated at: [\d]{2}.[\d]{2}.[\d]{4} [\d]{2}:[\d]{2}:[\d]{2};<br \/>/', $logmsg, $m_time);
+			$logarray[$counter]['time'] = substr($m_time[0], 14, -7);
+			
+			preg_match('/Originated by: [\S]{1,};<br \/>/', $logmsg, $m_author);
+			$logarray[$counter]['author'] = substr($m_author[0], 14, -7);
+			
+			preg_match('/Recipients: [\S]{1,};<br \/>/', $logmsg, $m_rcpt);
+			$logarray[$counter]['recipients'] = str_replace(",", "<br />", substr($m_rcpt[0], 12, -7));
+			
+			preg_match('/Subject: .*;<br \/>/', $logmsg, $m_subject);
+			$logarray[$counter]['subject'] = substr($m_subject[0], 9, -7);
+			
+			preg_match('/Message:<br \/>[\s\S]*$/', $logmsg, $m_msg);
+			$logarray[$counter]['text'] = substr($m_msg[0], 14);
+			
+			++$counter;
+		}
+		
+		$logtable->setData($logarray);
+		$logtable->addCommandButton('showForm', $this->lng->txt('add'));
+		$logcontent = $logtable->getHTML();
+		
+		$this->tpl->setContent($dateselect."<br />".$logcontent);
+	}
+	
+	// select log form
+	private function logForm()
+	{
+		global $log;
+		
+		include_once 'Services/Form/classes/class.ilPropertyFormGUI.php';
+		$this->form = new ilPropertyFormGUI();
+		
+		$this->form->setFormAction($this->ctrl->getFormAction($this, 'logs'));
+		
+		$sd = new ilDateTimeInputGUI($this->lng->txt('logs'), 'log_date');
+		$sd->setStartYear(2014);
+		if(isset($_POST['log_date']))
+		{$sd->setDate(new ilDate($_POST['log_date']['date']['y']."-".$_POST['log_date']['date']['m']."-".$_POST['log_date']['date']['d'],IL_CAL_DATE));}
+		else
+		{$sd->setDate(new ilDateTime(date("Y-m-d"),IL_CAL_DATE));}
+		
+		$this->form->addItem($sd);
+		
+		$this->form->addCommandButton('logs', $this->lng->txt('go'));
+	}
+	
 	private function setDefaultValues()
 	{
 		$settings = $this->ilias->getAllSettings();
@@ -365,6 +477,10 @@ class ilObjMailGUI extends ilObjectGUI
 		{
 			$tabs_gui->addTarget("settings",
 				$this->ctrl->getLinkTarget($this, "view"), array("view", 'save', ""), "", "");
+			
+			// CHANGES IN CORE
+			$tabs_gui->addTarget("logs",
+				$this->ctrl->getLinkTarget($this, "logs"), array("logs", '', ""), "", "");
 		}
 
 		if($rbacsystem->checkAccess('write', $this->object->getRefId()))

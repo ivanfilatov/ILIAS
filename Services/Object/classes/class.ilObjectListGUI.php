@@ -1953,6 +1953,51 @@ class ilObjectListGUI
 
 				$cnt++;
 			}
+			
+			// CHANGES IN CORE @author Ivan Filatov 03 aug 2015
+			// add info about downloads to the object list
+			if($this->type == "file")
+			{
+				$this->tpl->touchBlock("separator_prop");
+				$this->tpl->touchBlock("newline_prop");
+				$this->tpl->touchBlock("std_prop");
+				
+				require_once 'Services/Tracking/classes/class.ilChangeEvent.php';
+				if (ilChangeEvent::_isActive())
+				{
+					if ($ilUser->getId() != ANONYMOUS_USER_ID)
+					{
+						$readEvents = ilChangeEvent::_lookupReadEvents($this->obj_id);
+						$count_users = 0;
+						$count_user_reads = 0;
+						$count_anonymous_reads = 0;
+						foreach ($readEvents as $evt)
+						{
+							if ($evt['usr_id'] == ANONYMOUS_USER_ID)
+							{
+								$count_anonymous_reads += $evt['read_count'];
+							}
+							else
+							{
+								$count_user_reads += $evt['read_count'];
+								$count_users++;
+							}
+						}
+					}
+				}
+				if($lng->lang_key == "en")
+				{
+					$this->tpl->setVariable("TXT_PROP", 'Downloads');
+					$this->tpl->setVariable("VAL_PROP", $count_user_reads.' by '.$count_users.' unique users');
+				}
+				if($lng->lang_key == "ru")
+				{
+					$this->tpl->setVariable("TXT_PROP", 'Загрузок');
+					$this->tpl->setVariable("VAL_PROP", $count_user_reads.', уник. пользователей: '.$count_users);
+				}
+			}
+			// end changes
+			
 			$this->tpl->setCurrentBlock("item_properties");
 			$this->tpl->parseCurrentBlock();
 		}
@@ -3499,9 +3544,46 @@ class ilObjectListGUI
 				$this->tpl->setVariable("ALT_ICON", $lng->txt("icon")." ".
 					ilPlugin::lookupTxt("rep_robj", $this->getIconImageType(), "obj_".$this->getIconImageType()));
 			}
+			
+			// CHANGES IN CORE @author Ivan Filatov 03 aug 2015
+			// add custom pictures
+			$use_custom_picture = false;
+			$props = $this->getProperties();
+			if(is_array($props)) {foreach($props as $prop)
+			{
+				if($prop['property'] == $lng->txt("type"))
+				{
+					switch(strtolower($prop['value']))
+					{
+						case "doc": 
+						case "docx": 
+						case "xls": 
+						case "xlsx": 
+						case "ppt": 
+						case "pptx": 
+						case "pdf": 
+						case "rar": 
+						case "zip":
+						case "7z":
+						case "txt":
+						case "exe":
+							{$use_custom_picture = "./Customizing/global/skin/icefskin/images/fileicons/l/".$prop['value'].".svg"; break;}
+						default: {$use_custom_picture = false; break;}
+					}
+					break;
+				}
+			}}
+			
+			if(!$use_custom_picture)
+			{
+				$this->tpl->setVariable("SRC_ICON", ilObject::_getIcon($this->obj_id, "small", $this->getIconImageType())); // initial line
+			}
+			else
+			{
+				$this->tpl->setVariable("SRC_ICON", $use_custom_picture);
+			}
+			// end add custom pics
 
-			$this->tpl->setVariable("SRC_ICON",
-				ilObject::_getIcon($this->obj_id, "small", $this->getIconImageType()));
 			$this->tpl->parseCurrentBlock();
 			$cnt += 1;
 		}

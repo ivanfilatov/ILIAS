@@ -30,6 +30,8 @@ class ilObjExercise extends ilObject
 	var $year;
 	var $instruction;
 	var $certificate_visibility;
+	var $personal_access; // CHANGES IN CORE
+	var $personal_access_names = []; // CHANGES IN CORE
 	
 	/**
 	 * 
@@ -80,6 +82,20 @@ class ilObjExercise extends ilObject
 	function getInstruction()
 	{
 		return $this->instruction;
+	}
+	
+	// CHANGES IN CORE
+	function setPersonalAccess($a_personal_access)
+	{
+		$this->personal_access = $a_personal_access;
+	}
+	function getPersonalAccess()
+	{
+		return $this->personal_access;
+	}
+	function getPersonalAccessNames()
+	{
+		return $this->personal_access_names;
 	}
 	
 	/**
@@ -178,7 +194,8 @@ class ilObjExercise extends ilObject
 			"pass_nr" => array("text", $this->getPassNr()),
 			"show_submissions" => array("integer", (int) $this->getShowSubmissions()),
 			'compl_by_submission' => array('integer', (int)$this->isCompletionBySubmissionEnabled()),
-			"certificate_visibility" => array("integer", (int)$this->getCertificateVisibility())
+			"certificate_visibility" => array("integer", (int)$this->getCertificateVisibility()),
+			"personal_access" => array("integer", (int)$this->getPersonalAccess()), // CHANGES IN CORE
 			));
 		return true;
 	}
@@ -202,6 +219,7 @@ class ilObjExercise extends ilObject
 	 	$new_obj->saveData();
 	 	$new_obj->setPassNr($this->getPassNr());
 	 	$new_obj->setShowSubmissions($this->getShowSubmissions());
+		$new_obj->setPersonalAccess($this->getPersonalAccess()); // CHANGES IN CORE
 	 	$new_obj->setCompletionBySubmission($this->isCompletionBySubmissionEnabled());	 
 	 	$new_obj->update();
 	 	
@@ -281,6 +299,18 @@ class ilObjExercise extends ilObject
 
 		parent::notify($a_event,$a_ref_id,$a_node_id,$a_params);
 	}
+	
+	// CHANGES IN CORE
+	function definePersonalAccessNames()
+	{
+		global $ilDB;
+		$query = "SELECT user_id, atext FROM exc_returned WHERE ass_id = ".$ilDB->quote($this->getPersonalAccess(), "integer");
+		$res = $ilDB->query($query);
+		while($row = $ilDB->fetchObject($res))
+		{
+			$this->personal_access_names[$row->user_id] = $row->atext;
+		}
+	}
 
 	function read()
 	{
@@ -307,6 +337,13 @@ class ilObjExercise extends ilObject
 			}
 			$this->setCompletionBySubmission($row->compl_by_submission == 1 ? true : false);
 			$this->setCertificateVisibility($row->certificate_visibility);
+			
+			// CHANGES IN CORE
+			$this->setPersonalAccess($row->personal_access); 
+			if($row->personal_access > 0)
+			{
+				$this->definePersonalAccessNames();
+			}
 		}
 		
 		$this->members_obj = new ilExerciseMembers($this);
@@ -341,6 +378,7 @@ class ilObjExercise extends ilObject
 			"pass_mode" => array("text", $this->getPassMode()),
 			"pass_nr" => array("integer", $this->getPassNr()),
 			"show_submissions" => array("integer", (int) $this->getShowSubmissions()),
+			"personal_access" => array("integer", (int) $this->getPersonalAccess()), // CHANGES IN CORE
 			'compl_by_submission' => array('integer', (int)$this->isCompletionBySubmissionEnabled())
 			), array(
 			"obj_id" => array("integer", $this->getId())

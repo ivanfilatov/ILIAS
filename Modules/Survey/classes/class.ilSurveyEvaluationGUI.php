@@ -112,6 +112,13 @@ class ilSurveyEvaluationGUI
 			array("evaluationdetails")
 		);
 		
+		// CHANGES IN CORE @author Ivan Filatov
+		$ilTabs->addSubTabTarget(
+			"My results", 
+			$this->ctrl->getLinkTarget($this, "evaluationpersonal"), 
+			array("evaluationpersonal")
+		);
+		
 		if ($ilAccess->checkAccess("write", "", $this->object->getRefId()))
 		{
 			$ilTabs->addSubTabTarget(
@@ -339,7 +346,7 @@ class ilSurveyEvaluationGUI
 				$format_title->setAlign('center');
 				// Creating a worksheet
 				include_once ("./Services/Excel/classes/class.ilExcelUtils.php");
-				$mainworksheet =& $workbook->addWorksheet();
+				$mainworksheet =& $workbook->addWorksheet("Summary"); // CHANGES IN CORE @author Ivan Filatov 18 nov 2014 add name "Summary"
 				$column = 0;
 				switch ($_POST['export_label'])
 				{
@@ -373,6 +380,15 @@ class ilSurveyEvaluationGUI
 				$mainworksheet->writeString(0, $column, ilExcelUtils::_convert_text($this->lng->txt("median"), $_POST["export_format"]), $format_bold);
 				$column++;
 				$mainworksheet->writeString(0, $column, ilExcelUtils::_convert_text($this->lng->txt("arithmetic_mean"), $_POST["export_format"]), $format_bold);
+				$column++;
+				$mainworksheet->writeString(0, $column, ilExcelUtils::_convert_text("St.dev.", $_POST["export_format"]), $format_bold); // CHANGES IN CORE @author Ivan Filatov 18 nov 2014 add stdev
+				
+				// CHANGES IN CORE @author Ivan Filatov 20 nov 2014
+				// add new summary list
+				// 15 for spring, 13 for fall
+				$summaryworksheet =& $workbook->addWorksheet("(".mb_substr($this->object->getTitle(), 13, 3).") ".mb_substr($this->object->getTitle(), 29));
+				$column = 0;
+				
 				break;
 			
 			case self::TYPE_SPSS:
@@ -424,6 +440,7 @@ class ilSurveyEvaluationGUI
 				
 		$questions =& $this->object->getSurveyQuestions();
 		$counter++;
+		$counter2++; // add new summary list
 		foreach ($questions as $data)
 		{
 			include_once "./Modules/SurveyQuestionPool/classes/class.SurveyQuestion.php";
@@ -433,6 +450,11 @@ class ilSurveyEvaluationGUI
 			{
 				case self::TYPE_XLS:
 					$counter = $question->setExportCumulatedXLS($mainworksheet, $format_title, $format_bold, $eval, $counter, $_POST['export_label']);
+					
+					// CHANGES IN CORE @author Ivan Filatov 20 nov 2014
+					// add new summary list
+					if(get_class($question) == "SurveyMatrixQuestion") {$counter2 = $question->setExportCumulatedXLS($summaryworksheet, $format_title, $format_bold, $eval, $counter2, $_POST['export_label']);}
+					
 					break;
 				
 				case self::TYPE_SPSS:
@@ -1311,6 +1333,70 @@ class ilSurveyEvaluationGUI
 			$tpl->setContent($html);
 		}
 		
+	}
+	
+	// CHANGES IN CORE @author Ivan Filatov
+	// new function for personal evaluation / My results
+	function evaluationpersonal()
+	{
+		global $rbacsystem, $ilToolbar, $ilUser, $ilTabs;
+		
+		$ilTabs->activateSubtab("My results");
+		$ilTabs->activateTab("svy_results_personal");
+		
+		$ilToolbar->setFormAction($this->ctrl->getFormAction($this));
+
+		$this->tpl->addBlockFile("ADM_CONTENT", "adm_content", "tpl.il_svy_svy_evaluation.html", "Modules/Survey");
+
+		if(!$this->object->get360Mode() || $appr_id)
+		{			
+			$questions =& $this->object->getSurveyQuestions();
+			$counter = 1;
+			$last_questionblock_id = null;
+			
+			$results_found = false;
+			
+			// determine lecturer
+			$qcheck = $questions;
+			$user_is_lecturer = false;
+			foreach ($qcheck as $qck) {if(preg_match("/lect_(att|evalhse|evalicef)_".$ilUser->login."/", $qck["label"])) {$user_is_lecturer = true;}}
+			
+			foreach ($questions as $qdata)
+			{			
+				include_once "./Modules/SurveyQuestionPool/classes/class.SurveyQuestion.php";
+				$question_gui = SurveyQuestion::_instanciateQuestionGUI($qdata["question_id"]);
+				$question = $question_gui->object;
+				$c = $question->getCumulatedResultData($this->object->getSurveyId(), $counter, $finished_ids);
+
+				$counter++;
+				
+				
+				if (mb_stripos($question->label, $ilUser->login) || $user_is_lecturer) // THIS IS IMPORTANT!!!
+				{
+					$results_found = true;
+					// questionblock title handling
+					if($qdata["questionblock_id"] && $qdata["questionblock_id"] != $last_questionblock_id)
+					{
+						$qblock = $this->object->getQuestionblock($qdata["questionblock_id"]);
+						if($qblock["show_blocktitle"])
+						{
+							$this->tpl->setCurrentBlock("detail_qblock");
+							$this->tpl->setVariable("BLOCKTITLE", $qdata["questionblock_title"]);		
+							$this->tpl->parseCurrentBlock();						
+						}
+
+						$last_questionblock_id = $qdata["questionblock_id"];
+					}
+
+					$detail = $question_gui->getCumulatedResultsDetails($this->object->getSurveyId(), $counter-1, $finished_ids);
+					$this->tpl->setCurrentBlock("detail");
+					$this->tpl->setVariable("DETAIL", $detail);				
+					$this->tpl->parseCurrentBlock();
+				}
+			}
+			
+			if(!$results_found) {$this->tpl->setVariable("BLOCKTITLE", "No results found.");}
+		}
 	}
 }
 

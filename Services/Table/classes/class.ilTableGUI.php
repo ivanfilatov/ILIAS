@@ -580,7 +580,7 @@ class ilTableGUI
 			
 			if ($this->lang_support)
 			{
-				$numinfo = "(".$this->lng->txt("dataset")." ".$start." - ".$end." ".strtolower($this->lng->txt("of"))." ".$this->max_count.")";
+				$numinfo = "(".$this->lng->txt("dataset")." ".$start." - ".$end." ".mb_strtolower($this->lng->txt("of"), "UTF-8")." ".$this->max_count.")"; // CHANGES IN CORE
 			}
 			else
 			{
@@ -608,7 +608,7 @@ class ilTableGUI
 			
 			if ($this->lang_support)
 			{
-				$numinfo = "(".$this->lng->txt("dataset")." ".$start." - ".$end." ".strtolower($this->lng->txt("of"))." ".$this->max_count.")";
+				$numinfo = "(".$this->lng->txt("dataset")." ".$start." - ".$end." ".mb_strtolower($this->lng->txt("of"), "UTF-8")." ".$this->max_count.")"; // CHANGES IN CORE
 			}
 			else
 			{

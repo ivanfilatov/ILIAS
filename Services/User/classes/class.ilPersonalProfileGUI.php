@@ -601,6 +601,9 @@ class ilPersonalProfileGUI
 			$this->lng->txt("personal_data"),
 			$this->ctrl->getLinkTarget($this, "showPersonalData"));
 
+		// CHANGES IN CORE @author Ivan Filatov 31 jul 2015
+		// no public profile, no export
+/*
 		// public profile
 		$ilTabs->addTab("public_profile",
 			$this->lng->txt("public_profile"),
@@ -610,6 +613,7 @@ class ilPersonalProfileGUI
 		$ilTabs->addTab("export",
 			$this->lng->txt("export")."/".$this->lng->txt("import"),
 			$this->ctrl->getLinkTarget($this, "showExportImport"));
+*/
 
 		// #17570
 		if(($ilUser->getPref("public_profile") && 

@@ -618,7 +618,7 @@ class SurveyMultipleChoiceQuestion extends SurveyQuestion
 	function setExportDetailsXLS(&$workbook, &$format_title, &$format_bold, &$eval_data, $export_label)
 	{
 		include_once ("./Services/Excel/classes/class.ilExcelUtils.php");
-		$worksheet =& $workbook->addWorksheet();
+		$worksheet =& $workbook->addWorksheet($this->label); //CHANGES IN CORE
 		$rowcounter = 0;
 		switch ($export_label)
 		{

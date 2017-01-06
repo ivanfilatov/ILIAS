@@ -1543,6 +1543,8 @@ class ilObjWikiGUI extends ilObjectGUI
 		// :TODO: fixing css dummy parameters
 		$html = preg_replace("/\?dummy\=[0-9]+/", "", $html);
 		$html = preg_replace("/\?vers\=[0-9A-Za-z\-]+/", "", $html);
+		$html = preg_replace("/<!--(.*?)-->/", "", $html); // CHANGES IN CORE
+		$html = preg_replace("/<p style=\"page-break-after:always;\"><\/p>/", "", $html); // CHANGES IN CORE
 		
 		include_once "Services/PDFGeneration/classes/class.ilPDFGeneration.php";
 		include_once "Services/PDFGeneration/classes/class.ilPDFGenerationJob.php";
@@ -1555,11 +1557,13 @@ class ilObjWikiGUI extends ilObjectGUI
 			->setMarginBottom("10")
 			->setOutputMode("D") // download
 			->setFilename("wiki.pdf") // :TODO:
-			->setCreator("ILIAS Wiki") // :TODO:
+			->setCreator("ICEF") // CHANGES IN CORE :TODO:
 			->setImageScale(1.25) // complete content scaling ?!
 			->addPage($html);
-		
-		ilPDFGeneration::doJob($job);
+
+		// CHANGES IN CORE
+		//ilPDFGeneration::doJob($job);
+		ilPDFGeneration::doMJob($html);
 	}	
 
 	/**

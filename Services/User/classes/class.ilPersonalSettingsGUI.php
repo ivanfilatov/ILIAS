@@ -316,11 +316,15 @@ class ilPersonalSettingsGUI
 				"", "", "", $showPassword);
 		}
 
+		// CHANGES IN CORE @author Ivan Filatov 31 jul 2015
+		// remove mail settings tab
+/*
 		include_once 'Services/Mail/classes/class.ilMailGlobalServices.php';
 		if($rbacsystem->checkAccess('internal_mail', ilMailGlobalServices::getMailObjectRefId()))
 		{
 			$ilTabs->addTarget("mail_settings", $this->ctrl->getLinkTarget($this, "showMailOptions"), "", "", "", $showMailOptions);
 		}
+*/
 
 		$chatSettings = new ilSetting('chatroom');
 		$notificationSettings = new ilSetting('notifications');
@@ -859,6 +863,9 @@ class ilPersonalSettingsGUI
 			}
 		}
 
+		// CHANGES IN CORE @author Ivan Filatov 18 august 2014
+		// we don't want to use screen reader optimization
+/*
 		// screen reader optimization
 		if ($this->userSettingVisible("screen_reader_optimization"))
 		{ 
@@ -868,7 +875,7 @@ class ilPersonalSettingsGUI
 			$cb->setInfo($this->lng->txt("user_screen_reader_optimization_info"));
 			$this->form->addItem($cb);
 		}
-
+*/
 		// hits per page
 		if ($this->userSettingVisible("hits_per_page"))
 		{

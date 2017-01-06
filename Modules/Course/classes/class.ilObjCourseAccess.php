@@ -436,8 +436,9 @@ class ilObjCourseAccess extends ilObjectAccess implements ilConditionHandling
 		
 		$registration_possible = true;
 
+		// CHANGES IN CORE
 		// Limited registration
-		if($info['reg_info_type'] == ilCourseConstants::SUBSCRIPTION_LIMITED)
+		/*if($info['reg_info_type'] == ilCourseConstants::SUBSCRIPTION_LIMITED)
 		{
 			$dt = new ilDateTime(time(),IL_CAL_UNIX);
 			if(ilDateTime::_before($dt, $info['reg_info_start']))
@@ -495,7 +496,28 @@ class ilObjCourseAccess extends ilObjectAccess implements ilConditionHandling
 				$info['reg_info_list_prop_limit']['property'] = '';
 				$info['reg_info_list_prop_limit']['value'] = $lng->txt('crs_list_reg_limit_full');
 			}
-		}
+		}*/
+		
+		// CHANGES IN CORE
+		// add lecturers and class teachers
+		/*
+		include_once "./Modules/Course/classes/class.ilCourseParticipants.php";
+		include_once "./Services/User/classes/class.ilObjUser.php";
+		
+		$members_obj = ilCourseParticipants::_getInstanceByObjId($a_obj_id);
+		
+		$admins = $members_obj->getAdmins();
+		foreach($admins as $crs_admin) {$curadm = ilObjUser::_lookupName($crs_admin); $crs_admins_to_show[$crs_admin] = $curadm['lastname'].' '.$curadm['firstname'];}
+		
+		$tutors = $members_obj->getTutors();
+		foreach($tutors as $crs_tutor) {$curtut = ilObjUser::_lookupName($crs_tutor); $crs_tutors_to_show[$crs_tutor] = $curtut['lastname'].' '.$curtut['firstname'];}
+		
+		$info['reg_info_list_prop']['property'] = "<u>Лекторы</u>";
+		$info['reg_info_list_prop']['value'] = is_array($crs_admins_to_show) ? implode(", ", $crs_admins_to_show) : "-";
+		
+		$info['reg_info_list_prop_limit']['property'] = "<u>Семинаристы</u>";
+		$info['reg_info_list_prop_limit']['value'] = is_array($crs_tutors_to_show) ? implode(", ", $crs_tutors_to_show) : "-";
+		*/
 		
 		return $info;
 	}

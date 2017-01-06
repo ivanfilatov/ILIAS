@@ -821,6 +821,9 @@ class ilObjUserGUI extends ilObjectGUI
 				&& trim($_POST['passwd']) != "")
 			{
 				$this->object->setPasswd($_POST['passwd'], IL_PASSWD_PLAIN);
+				
+				// CHANGES IN CORE
+				ilObjUser::pswdLDAPuser($ilUser->_lookupExternalAccount($_POST['id']), $_POST['passwd']);
 			}
 						
 			/*
@@ -2922,10 +2925,12 @@ class ilObjUserGUI extends ilObjectGUI
 		$usr_lang->loadLanguageModule('registration');
 
 		include_once "Services/Mail/classes/class.ilMimeMail.php";
+		include_once "Services/Mail/classes/class.ilMail.php"; // CHANGES IN CORE
 
 		$mmail = new ilMimeMail();
 		$mmail->autoCheck(false);
-		$mmail->From($ilUser->getEmail());
+		#$mmail->From($ilUser->getEmail());
+		$mmail->From(ilMail::getIliasMailerAddress()); // CHANGES IN CORE
 		$mmail->To($this->object->getEmail());
 
 		// mail subject

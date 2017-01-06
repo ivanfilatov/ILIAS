@@ -504,10 +504,15 @@ class ilWikiPage extends ilPageObject
 		global $ilDB;
 		
 		$pages = parent::getAllPages("wpg", $a_wiki_id);
-		
-		$query = "SELECT * FROM il_wiki_page".
+
+		// CHANGES IN CORE
+		/*$query = "SELECT * FROM il_wiki_page".
 			" WHERE wiki_id = ".$ilDB->quote($a_wiki_id, "integer").
-			" ORDER BY title";
+			" ORDER BY title";*/
+		$query = "SELECT * FROM il_wiki_page ".
+			" LEFT JOIN il_wiki_imp_pages ON (il_wiki_page.id = il_wiki_imp_pages.page_id AND il_wiki_page.wiki_id = il_wiki_imp_pages.wiki_id) ".
+			" WHERE il_wiki_imp_pages.ord IS NOT NULL AND il_wiki_page.wiki_id = ".$ilDB->quote($a_wiki_id, "integer").
+			" ORDER BY il_wiki_imp_pages.ord;";
 		$set = $ilDB->query($query);
 
 		$pg = array();

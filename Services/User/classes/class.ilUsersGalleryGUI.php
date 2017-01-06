@@ -50,6 +50,11 @@ class ilUsersGalleryGUI
 	 * @var array
 	 */
 	protected $contact_array;
+	
+	/**
+	 * @var array
+	 */	
+	protected $noshow_logins = ['root', 'skonyshev', 'timetable', 'no_reply', 'test_student', 'test_teacher']; // CHANGES IN CORE
 
 	/**
 	 * @param ilGalleryUsers $object
@@ -152,37 +157,59 @@ class ilUsersGalleryGUI
 		$panel = ilPanelGUI::getInstance();
 		$panel->setBody($this->lng->txt('no_gallery_users_available'));
 		$tpl->setVariable('NO_ENTRIES_HTML', json_encode($panel->getHTML()));
-
+		
+		// CHANGES IN CORE
+		$current_section = "admin";
+		$new_section = "admin";
+		
 		foreach($users as $user_data)
 		{
 			/**
 			 * @var $user ilObjUser
 			 */
 			$user = $user_data['user'];
-
-			if($user_data['public_profile'])
+			
+			// CHANGES IN CORE
+			if(in_array($user->getId(), $this->object->defaultAdmins)) {$new_section = "admin";}
+			if(in_array($user->getId(), $this->object->defaultTutors)) {$new_section = "tutor";}
+			if(in_array($user->getId(), $this->object->defaultMembers)) {$new_section = "member";}
+			
+			// CHANGES IN CORE
+			if(!in_array($user->getLogin(), $this->noshow_logins))
 			{
-				$tpl->setCurrentBlock('linked_image');
-				$this->ctrl->setParameterByClass('ilpublicuserprofilegui', 'user', $user->getId());
-				$profile_target = $this->ctrl->getLinkTargetByClass('ilpublicuserprofilegui', 'getHTML');
-				$tpl->setVariable('LINK_PROFILE', $profile_target);
-				$tpl->setVariable('PUBLIC_NAME', $user_data['public_name']);
+				if($new_section != $current_section)
+				{
+					$tpl->setCurrentBlock('clearfix');
+					$tpl->setVariable('CLEARFIX_LINE', '<div class="clearfix"></div>');
+					$tpl->parseCurrentBlock();
+				}
+				
+				if($user_data['public_profile'])
+				{
+					$tpl->setCurrentBlock('linked_image');
+					$this->ctrl->setParameterByClass('ilpublicuserprofilegui', 'user', $user->getId());
+					$profile_target = $this->ctrl->getLinkTargetByClass('ilpublicuserprofilegui', 'getHTML');
+					$tpl->setVariable('LINK_PROFILE', $profile_target);
+					$tpl->setVariable('PUBLIC_NAME', $user->getFullname());
+				}
+				else
+				{
+					$tpl->setCurrentBlock('unlinked_image');
+					$tpl->setVariable('PUBLIC_NAME', $user->getLogin());
+				}
+				$tpl->setVariable('SRC_USR_IMAGE', $user->getPersonalPicturePath('xsmall'));
+				$tpl->parseCurrentBlock();
+	
+				$tpl->setCurrentBlock('user');
+	
+				$tpl->setVariable('BUDDYLIST_STATUS', get_class($buddylist->getRelationByUserId($user->getId())->getState()));
+				$tpl->setVariable('USER_CC_CLASS', $this->object->getUserCssClass());
+				$tpl->setVariable('USER_ID', $user->getId());
+				$this->renderLinkButton($tpl, $user);
+				$tpl->parseCurrentBlock();
 			}
-			else
-			{
-				$tpl->setCurrentBlock('unlinked_image');
-				$tpl->setVariable('PUBLIC_NAME', $user->getLogin());
-			}
-			$tpl->setVariable('SRC_USR_IMAGE', $user->getPersonalPicturePath('small'));
-			$tpl->parseCurrentBlock();
-
-			$tpl->setCurrentBlock('user');
-
-			$tpl->setVariable('BUDDYLIST_STATUS', get_class($buddylist->getRelationByUserId($user->getId())->getState()));
-			$tpl->setVariable('USER_CC_CLASS', $this->object->getUserCssClass());
-			$tpl->setVariable('USER_ID', $user->getId());
-			$this->renderLinkButton($tpl, $user);
-			$tpl->parseCurrentBlock();
+			
+			$current_section = $new_section;
 		}
 
 		return $tpl;

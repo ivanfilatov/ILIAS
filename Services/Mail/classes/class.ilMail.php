@@ -1176,6 +1176,23 @@ class ilMail
 			{
 				$this->sendMimeMail(implode(',', $to), '', implode(',', $bcc), $a_subject, $a_message, $a_attachments);
 			}
+
+// CHANGES IN CORE
+// log this (no log for cc and bcc yet)
+$mail_log = @fopen("/var/icef-info/mailings/mailing.log", "a");
+$message_to_log = str_replace("\n", " ", $a_message);
+fwrite($mail_log,
+"
+Originated at: ".date("d.m.Y H:i:s").";
+Originated by: ".ilObjUser::getLoginByUserId($this->user_id).";
+Recipients: ".implode(',', $as_email).";
+Subject: {$a_subject};
+Message:\n{$message_to_log}
+
+=====================
+
+");
+
 		}
 		else # Use Placeholders
 		{
@@ -1248,6 +1265,22 @@ class ilMail
 					$this->sendMimeMail($email, '', '', $a_subject, $this->replacePlaceholders($a_message, $id), $a_attachments);
 				}
 			}
+            
+// CHANGES IN CORE
+// log this (no log for cc and bcc yet)
+$mail_log = @fopen("/var/icef-info/mailings/mailing.log", "a");
+$message_to_log = str_replace("\n", " ", $a_message);
+fwrite($mail_log,
+"
+Originated at: ".date("d.m.Y H:i:s").";
+Originated by: ".ilObjUser::getLoginByUserId($this->user_id).";
+Recipients: ".implode(',', $as_email).";
+Subject: {$a_subject};
+Message:\n{$message_to_log}
+
+=====================
+
+");
 
 			$as_email = array();
 

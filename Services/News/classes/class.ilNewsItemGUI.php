@@ -264,10 +264,14 @@ class ilNewsItemGUI
 		$text_input->setMaxLength(200);
 		$this->form_gui->addItem($text_input);
 
+		// CHANGES IN CORE @author Ivan Filatov 31 jul 2015
+		// change some parameters
 		// Property Content
 		$text_area = new ilTextAreaInputGUI($lng->txt("news_news_item_content"), "news_content");
 		$text_area->setInfo("");
-		$text_area->setRequired(false);
+		$text_area->setCols("40"); // new
+		$text_area->setRows("8"); // new
+		$text_area->setRequired(true); // was false
 		$this->form_gui->addItem($text_area);
 
 		// Property Visibility
@@ -281,6 +285,9 @@ class ilNewsItemGUI
 		$radio_group->setValue("users");
 		$this->form_gui->addItem($radio_group);
 
+		// CHANGES IN CORE @author Ivan Filatov 31 jul 2015
+		// we do not need long content
+		/*
 		// Property ContentLong
 		$text_area = new ilTextAreaInputGUI($lng->txt("news_news_item_content_long"), "news_content_long");
 		$text_area->setInfo($lng->txt("news_news_item_content_long_info"));
@@ -289,7 +296,7 @@ class ilNewsItemGUI
 		$text_area->setRows("8");
 		$text_area->setUseRte(true);
 		$this->form_gui->addItem($text_area);
-
+		*/
 
 		// save and cancel commands
 		if (in_array($a_mode, array(IL_FORM_CREATE,IL_FORM_RE_CREATE)))

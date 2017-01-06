@@ -46,8 +46,10 @@ class ilAttendanceList
 		
 		// always available
 		$this->presets['name'] = array($lng->txt('name'), true);
-		$this->presets['login'] = array($lng->txt('login'), true);
-		$this->presets['email'] = array($lng->txt('email'));	
+		$this->presets['eng_name'] = array("English name", true); // CHANGES IN CORE @author Ivan Filatov 05 aug 2015
+		$this->presets['login'] = array($lng->txt('login'), false);
+		$this->presets['phone_mobile'] = array($lng->txt('phone_mobile'), true); // CHANGES IN CORE @author Ivan Filatov 05 aug 2015
+		$this->presets['email'] = array($lng->txt('email'), true);	
 		
 		$lng->loadLanguageModule('crs');
 		
@@ -577,6 +579,27 @@ class ilAttendanceList
 								if(!$user_data[$id])
 								{
 									$value = ilObjUser::_lookupEmail($user_id);
+									break;
+								}
+								
+							
+							// CHANGES IN CORE @author Ivan Filatov 05 aug 2015
+							// mobile field add
+							case "phone_mobile":
+								if(!$user_data[$id])
+								{
+									$value = ilObjUser::_lookupFields($user_id)['phone_mobile'];
+									break;
+								}
+								
+								
+							// CHANGES IN CORE @author Ivan Filatov 05 aug 2015
+							// english name add
+							case "eng_name":
+								if(!$user_data[$id])
+								{
+									include_once "Services/User/classes/class.ilUserDefinedData.php";
+									$value = ilUserDefinedData::lookupData([$user_id], [1])[$user_id][1];
 									break;
 								}
 								

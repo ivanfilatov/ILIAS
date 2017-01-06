@@ -503,6 +503,13 @@ class SurveySingleChoiceQuestionGUI extends SurveyQuestionGUI
 		$template->setVariable("TEXT_OPTION_VALUE", $this->cumulated["MEDIAN"]);
 		$template->parseCurrentBlock();
 		
+		// CHANGES IN CORE @author Ivan Filatov 21 dec 2015
+		// add mean to every row details block
+		$template->setCurrentBlock("detail_row");				
+		$template->setVariable("TEXT_OPTION", $this->lng->txt("arithmetic_mean"));
+		$template->setVariable("TEXT_OPTION_VALUE", $this->cumulated["ARITHMETIC_MEAN"]);
+		$template->parseCurrentBlock();
+		
 		$template->setCurrentBlock("detail_row");
 		$template->setVariable("TEXT_OPTION", $this->lng->txt("categories"));
 		$table = array();

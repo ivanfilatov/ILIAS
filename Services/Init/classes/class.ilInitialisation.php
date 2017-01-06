@@ -1164,7 +1164,8 @@ class ilInitialisation
 						&& $current_script != "error.php"
 						&& $current_script != "chat.php"
 						&& $current_script != "wac.php"
-						&& $current_script != "index.php"); // #10316
+						&& $current_script != "index.php" // #10316
+						&& $current_script != "mobile.php"); // CHANGES IN CORE
 				
 				if($mandatory_auth)
 				{

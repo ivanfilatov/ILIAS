@@ -2151,7 +2151,7 @@ echo "ilTabl2GUI->addSelectionButton() has been deprecated with 4.2. Please try 
 			{
 				if ($this->lang_support)
 				{
-					$numinfo = "(".$start." - ".$end." ".strtolower($this->lng->txt("of"))." ".$this->max_count.")";
+					$numinfo = "(".$start." - ".$end." ".mb_strtolower($this->lng->txt("of"), "UTF-8")." ".$this->max_count.")"; // CHANGES IN CORE
 				}
 				else
 				{

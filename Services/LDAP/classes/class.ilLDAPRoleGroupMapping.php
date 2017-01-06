@@ -65,6 +65,8 @@ class ilLDAPRoleGroupMapping
 	{
 	 	if(is_object(self::$instance))
 	 	{
+			// CHANGES IN CORE @author Ivan Filatov 02 july 2014
+			self::$instance->initServers(); // we need to re-init servers in order to assign a newly created user to ldap group; if we dont make it, user is not present in array of ldap users...
 	 		return self::$instance;	
 	 	}
 	 	return self::$instance = new ilLDAPRoleGroupMapping();

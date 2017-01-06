@@ -409,6 +409,19 @@ class ilObjSurveyGUI extends ilObjectGUI
 				array("illplistofobjectsgui", "illplistofsettingsgui", "illearningprogressgui", "illplistofprogressgui"));
 		}		
 
+		// CHANGES IN CORE @author Ivan Filatov
+		// add my results tab if there are logins in labels
+		$svy_questions = $this->object->getSurveyQuestions();
+		$display_my_results = false;
+		foreach($svy_questions as $question_check) {if(mb_stripos($question_check["label"], $ilUser->login)) {$display_my_results = true;}}
+		if($display_my_results)
+		{
+			$tabs_gui->addTab("svy_results_personal",
+				"My results / Мои результаты",
+				$this->ctrl->getLinkTargetByClass("ilsurveyevaluationgui", "evaluationpersonal"));
+		}
+		// end changes
+
 		if ($ilAccess->checkAccess("write", "", $this->ref_id))
 		{
 			if(!in_array("meta_data", $hidden_tabs))

@@ -310,7 +310,7 @@ class ilPublicUserProfileGUI
 	 */
 	function getEmbeddable($a_add_goto = false)
 	{
-		global $ilSetting, $lng, $ilCtrl, $lng, $ilSetting, $ilUser;
+		global $ilSetting, $lng, $ilCtrl, $lng, $ilSetting, $ilUser, $ilAccess, $rbacreview; // CHANGES IN CORE
 		
 		// get user object
 		if (!ilObject::_exists($this->getUserId()))
@@ -356,7 +356,9 @@ class ilPublicUserProfileGUI
 		$tpl->setVariable("FIRSTNAME", $first_name);
 		$tpl->setVariable("LASTNAME", $user->getLastName());
 		
-		if($user->getBirthday() &&
+		// CHANGES IN CORE @author Ivan Filatov 05 aug 2015
+		// remove vcard
+		/*if($user->getBirthday() &&
 			$this->getPublicPref($user, "public_birthday") == "y")
 		{
 			// #17574
@@ -374,7 +376,43 @@ class ilPublicUserProfileGUI
 			$tpl->setVariable("TXT_DOWNLOAD_VCARD", $lng->txt("vcard_download"));
 			$ilCtrl->setParameter($this, "user", $this->getUserId());
 			$tpl->setVariable("HREF_VCARD", $ilCtrl->getLinkTarget($this, "deliverVCard"));
+		}*/
+		
+		// CHANGES IN CORE @author Ivan Filatov 05 aug 2015
+		// edit link
+		if($ilAccess->checkAccess("write", "", 7))
+		{
+			$tpl->setCurrentBlock("link");
+			if($lng->lang_key == "ru") {$tpl->setVariable("TXT_LINK", "Редактировать профиль");} else {$tpl->setVariable("TXT_LINK", "Edit Profile");}
+			$tpl->setVariable("HREF_LINK", "ilias.php?ref_id=7&admin_mode=settings&obj_id=".$user->getId()."&cmd=view&cmdClass=ilobjusergui&cmdNode=wz:31&baseClass=ilAdministrationGUI");
 		}
+		
+		// CHANGES IN CORE @author Ivan Filatov 05 aug 2015
+		// roles
+		include_once './Services/AccessControl/classes/class.ilObjRole.php';
+
+		foreach($rbacreview->assignedRoles($user->getId()) as $role)
+		{
+			$userroles[] = ilObjRole::_lookupTitle($role);
+		}
+		
+		sort($userroles);
+		$userroles_txt = "";
+		foreach($userroles as $rolename)
+		{
+			if(substr($rolename,0,3) == 'il_')
+			{
+				$rolename = "(local) ".ilObjRole::_getTranslation($rolename).": ".ilObject::_lookupTitle(ilObject::_lookupObjId(eregi_replace("([^0-9])", "", $rolename)));
+			}
+			else
+			{
+				$rolename = "(global) ".$rolename;
+			}
+			$userroles_txt .= $rolename.'<br />';
+		}
+		$tpl->setCurrentBlock("role_data");
+		if($lng->lang_key == "ru") {$tpl->setVariable("TXT_ROLE_DATA", "Приписанные роли");} else {$tpl->setVariable("TXT_ROLE_DATA", "Roles Assigned");}
+		$tpl->setVariable("ROLE_DATA", '<span style="font-size:10px;">'.$userroles_txt.'</span>');
 		
 		$webspace_dir = ilUtil::getWebspaceDir("user");
 		$check_dir = ilUtil::getWebspaceDir();
@@ -487,16 +525,20 @@ class ilPublicUserProfileGUI
 			$tpl->setVariable("INST_DEP", $v);
 			$tpl->parseCurrentBlock();
 		}
-
+		
+		// CHANGES IN CORE @author Ivan Filatov 01 oct 2014
+		$val_arr = array("getPhoneMobile" => "phone_mobile", "getEmail" => "email");
+		/*
 		// contact
 		$val_arr = array(
 			"getPhoneOffice" => "phone_office", "getPhoneHome" => "phone_home",
 			"getPhoneMobile" => "phone_mobile", "getFax" => "fax", "getEmail" => "email");
+		*/
 		$v = $sep = "";
 		foreach ($val_arr as $key => $value)
 		{
 			// if value "y" show information
-			if ($this->getPublicPref($user, "public_".$value) == "y")
+			if ($this->getPublicPref($user, "public_".$value) == "y" || $ilAccess->checkAccess("write", "", 139)) // add check for admins (write permission on 139 ref_id = all students group)
 			{
 				$v.= $sep.$lng->txt($value).": ".$user->$key();
 				$sep = "<br />";

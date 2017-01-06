@@ -352,8 +352,8 @@ class ilNewsItem extends ilNewsItemGen
 
 			$obj_id = ilObject::_lookupObjId($ref_id);
 			$obj_type = ilObject::_lookupType($obj_id);
-			$news = $news_item->getNewsForRefId($ref_id, $a_only_public, false,
-				$per, $a_prevent_aggregation, false, false, false, $a_user_id);
+			$news = $news_item->getNewsForRefId($ref_id, $a_only_public, true/*false*/, // CHANGES IN CORE
+				$per, $a_prevent_aggregation, false, true/*false*/, false, $a_user_id); // CHANGES IN CORE
 			
 			// counter
 			if (!is_null($a_cnt))

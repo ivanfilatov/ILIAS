@@ -2325,9 +2325,12 @@ class SurveyQuestion
 			$questiontext = ilStr::substr($questiontext, 0, $maxlen) . "...";
 		}
 		
+        // CHANGES IN CORE @author Ivan Filatov 18 nov 2014
+        // add leading zeros to counter and label instead of title
 		$result = array(
 			'counter' => $counter,
-			'title' => $counter.'. '.$this->getTitle(),
+            #'title' => $counter.'. '.$this->getTitle(),
+			'title' => sprintf('%03d', $counter).'. '.$this->label,
 			'question' => $questiontext,
 			'users_answered' => $cumulated['USERS_ANSWERED'],
 			'users_skipped' => $cumulated['USERS_SKIPPED'],

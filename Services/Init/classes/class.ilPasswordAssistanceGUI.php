@@ -220,8 +220,11 @@ class ilPasswordAssistanceGUI
 				$txt_key = 'pwassist_no_email_found';
 			}
 			else if(
-				$userObj->getAuthMode(true) != AUTH_LOCAL ||
-				($userObj->getAuthMode(true) == AUTH_DEFAULT && AUTH_DEFAULT != AUTH_LOCAL)
+				// CHANGES IN CORE @author Ivan Filatov 3 sep 2014
+				// allow LDAP users to use password assistance
+				($userObj->getAuthMode(true) != AUTH_LDAP) &&
+				($userObj->getAuthMode(true) != AUTH_LOCAL ||
+				($userObj->getAuthMode(true) == AUTH_DEFAULT && AUTH_DEFAULT != AUTH_LOCAL))
 			)
 			{
 				$userObj = null;

@@ -1285,7 +1285,8 @@ class SurveyMatrixQuestion extends SurveyQuestion
 				$prefix = (key($cumulated)+1) . " - ";
 			}
 			$cat = $this->getColumnForScale(key($cumulated)+1);
-			$result_array["MODE"] =  $prefix . $cat->title;
+			#$result_array["MODE"] =  $prefix . $cat->title; // CHANGES IN CORE @author Ivan Filatov 18 nov 2014
+            $result_array["MODE"] =  $cat->title; // without prefix
 			$result_array["MODE_VALUE"] =  key($cumulated)+1;
 			$result_array["MODE_NR_OF_SELECTIONS"] = $cumulated[key($cumulated)];
 		}
@@ -1305,14 +1306,53 @@ class SurveyMatrixQuestion extends SurveyQuestion
 		ksort($cumulated, SORT_NUMERIC);
 		$median = array();
 		$total = 0;
+        
+        // CHANGES IN CORE @author Ivan Filatov 17 nov 2014
+        // add mean and stdev calculation
+        $arithmetic_nom = 0; // my
+        $arithmetic_denom = 0; // my
+        $arithmetic_mean = 0; // my
+        $var_sqsum = 0; // my
+        $stdev = 0; // my
+                
 		foreach ($cumulated as $value => $key)
 		{
+            // we use indices as values and calculate their mean and stdev
+            // e.g. in scale (disagree-neutral-agree)
+            // there will be 1 for disagree, 2 for neutral etc.
+            // and mean will be calculated out of these values
+            $column = $this->getColumn($value);
+            if(!$column->neutral && $value <=5) //count only <=5 hack... sorry
+            {
+                $arithmetic_nom += ($value+1)*$key; // my
+                $arithmetic_denom += $key; // my
+                $var_sqsum += ($value+1)*($value+1)*$key; // my
+            }
+            
 			$total += $key;
 			for ($i = 0; $i < $key; $i++)
 			{
 				array_push($median, $value+1);
 			}
 		}
+        
+        // mean and stdev
+        if($arithmetic_denom > 1)
+		{
+            $arithmetic_mean = $arithmetic_nom / $arithmetic_denom;
+            $stdev = sqrt(($arithmetic_denom/($arithmetic_denom-1))*($var_sqsum/$arithmetic_denom - $arithmetic_mean*$arithmetic_mean));
+        }
+        elseif($arithmetic_denom == 1)
+        {
+            $arithmetic_mean = $arithmetic_nom;
+            $stdev = 0;
+        }
+        else
+        {
+            $arithmetic_mean = 0;
+            $stdev = 0;
+        }
+        
 		if ($total > 0)
 		{
 			if (($total % 2) == 0)
@@ -1322,8 +1362,9 @@ class SurveyMatrixQuestion extends SurveyQuestion
 				{
 					$cat = $this->getColumnForScale((int)floor($median_value));
 					$cat2 = $this->getColumnForScale((int)ceil($median_value));
-					$median_value = $median_value . "<br />" . "(" . $this->lng->txt("median_between") . " " . (floor($median_value)) . "-" . $cat->title . " " . $this->lng->txt("and") . " " . (ceil($median_value)) . "-" . $cat2->title . ")";
-				}
+					#$median_value = $median_value . "<br />" . "(" . $this->lng->txt("median_between") . " " . (floor($median_value)) . "-" . $cat->title . " " . $this->lng->txt("and") . " " . (ceil($median_value)) . "-" . $cat2->title . ")";
+                    $median_value = $cat->title." - ".$cat2->title; #new
+                }
 			}
 			else
 			{
@@ -1334,10 +1375,15 @@ class SurveyMatrixQuestion extends SurveyQuestion
 		{
 			$median_value = "";
 		}
-		$result_array["ARITHMETIC_MEAN"] = "";
-		$result_array["MEDIAN"] = $median_value;
-		$result_array["QUESTION_TYPE"] = "SurveyMatrixQuestion";
-		$result_array["ROW"] = $this->getRow($rowindex)->title;		
+        
+        // CHANGES IN CORE @author Ivan Filatov 18 nov 2014
+        $result_array["ARITHMETIC_MEAN"] = round($arithmetic_mean, 2); // mean of indices
+        $result_array["STANDART_DEVIATION"] = round($stdev, 2); // stdev
+        if (($total % 2) == 0) {$result_array["MEDIAN"] = $median_value;} // value instead of index
+        else {$median_cat = $this->getColumnForScale($median_value); $result_array["MEDIAN"] = $median_cat->title;} // value instead of index
+        $result_array["QUESTION_TYPE"] = "SurveyMatrixQuestion";
+		$result_array["ROW"] = $this->getRow($rowindex)->title;
+        
 		return $result_array;
 	}
 
@@ -1391,7 +1437,8 @@ class SurveyMatrixQuestion extends SurveyQuestion
 				$prefix = (key($cumulated)+1) . " - ";
 			}
 			$cat = $this->getColumnForScale(key($cumulated)+1);
-			$result_array["MODE"] =  $prefix . $cat->title;
+			#$result_array["MODE"] =  $prefix . $cat->title; // CHANGES IN CORE @author Ivan Filatov 18 nov 2014
+            $result_array["MODE"] =  $cat->title; // without prefix
 			$result_array["MODE_VALUE"] =  key($cumulated)+1;
 			$result_array["MODE_NR_OF_SELECTIONS"] = $cumulated[key($cumulated)];
 		}
@@ -1410,15 +1457,38 @@ class SurveyMatrixQuestion extends SurveyQuestion
 		}
 		ksort($cumulated, SORT_NUMERIC);
 		$median = array();
-		$total = 0;
+		$total = 0; $arithmetic_nom = 0; $arithmetic_denom = 0;
 		foreach ($cumulated as $value => $key)
 		{
+            // CHANGES IN CORE @author Ivan Filatov 18 nov 2014
+            // we use indices as values and calculate their mean and stdev
+            // e.g. in scale (disagree-neutral-agree)
+            // there will be 1 for disagree, 2 for neutral etc.
+            // and mean will be calculated out of these values
+            $column = $this->getColumn($value);
+            if(!$column->neutral)
+            {
+                $arithmetic_nom += ($value+1)*$key; // my
+                $arithmetic_denom += $key; // my
+            }
+            
 			$total += $key;
 			for ($i = 0; $i < $key; $i++)
 			{
 				array_push($median, $value+1);
 			}
 		}
+        
+        // mean only for cumulative
+        if($arithmetic_denom >= 1)
+        {
+            $arithmetic_mean = $arithmetic_nom / $arithmetic_denom;
+        }
+        else
+        {
+            $arithmetic_mean = 0;
+        }
+        
 		if ($total > 0)
 		{
 			if (($total % 2) == 0)
@@ -1428,8 +1498,9 @@ class SurveyMatrixQuestion extends SurveyQuestion
 				{
 					$cat = $this->getColumnForScale((int)floor($median_value));
 					$cat2 = $this->getColumnForScale((int)ceil($median_value));
-					$median_value = $median_value . "<br />" . "(" . $this->lng->txt("median_between") . " " . (floor($median_value)) . "-" . $cat->title . " " . $this->lng->txt("and") . " " . (ceil($median_value)) . "-" . $cat2->title . ")";
-				}
+					#$median_value = $median_value . "<br />" . "(" . $this->lng->txt("median_between") . " " . (floor($median_value)) . "-" . $cat->title . " " . $this->lng->txt("and") . " " . (ceil($median_value)) . "-" . $cat2->title . ")";
+                    $median_value = $cat->title." - ".$cat2->title; #new
+                }
 			}
 			else
 			{
@@ -1440,8 +1511,10 @@ class SurveyMatrixQuestion extends SurveyQuestion
 		{
 			$median_value = "";
 		}
-		$result_array["ARITHMETIC_MEAN"] = "";
-		$result_array["MEDIAN"] = $median_value;
+		// CHANGES IN CORE @author Ivan Filatov 18 nov 2014
+		$result_array["ARITHMETIC_MEAN"] = round($arithmetic_mean, 2); // mean of indices
+		if (($total % 2) == 0) {$result_array["MEDIAN"] = $median_value;} // value instead of index
+        else {$median_cat = $this->getColumnForScale($median_value); $result_array["MEDIAN"] = $median_cat->title;} // value instead of index
 		$result_array["QUESTION_TYPE"] = "SurveyMatrixQuestion";
 		
 		$cumulated_results = array();
@@ -1467,66 +1540,239 @@ class SurveyMatrixQuestion extends SurveyQuestion
 	*/
 	function setExportCumulatedXLS(&$worksheet, &$format_title, &$format_bold, &$eval_data, $row, $export_label)
 	{
+        global $ilDB;
+        
 		include_once ("./Services/Excel/classes/class.ilExcelUtils.php");
 		$column = 0;
-		switch ($export_label)
-		{
-			case 'label_only':
-				$worksheet->writeString($row, $column, ilExcelUtils::_convert_text($this->label));
-				break;
-			case 'title_only':
-				$worksheet->writeString($row, $column, ilExcelUtils::_convert_text($this->getTitle()));
-				break;
-			default:
-				$worksheet->writeString($row, $column, ilExcelUtils::_convert_text($this->getTitle()));
-				$column++;
-				$worksheet->writeString($row, $column, ilExcelUtils::_convert_text($this->label));
-				break;
-		}
-		$column++;
-		$worksheet->writeString($row, $column, ilExcelUtils::_convert_text(strip_tags($this->getQuestiontext())));
-		$column++;
-		$worksheet->writeString($row, $column, ilExcelUtils::_convert_text($this->lng->txt($eval_data["TOTAL"]["QUESTION_TYPE"])));
-		$column++;
-		$worksheet->write($row, $column, $eval_data["TOTAL"]["USERS_ANSWERED"]);
-		$column++;
-		$worksheet->write($row, $column, $eval_data["TOTAL"]["USERS_SKIPPED"]);
-		$column++;
-		$worksheet->write($row, $column, ilExcelUtils::_convert_text($eval_data["TOTAL"]["MODE_VALUE"]));
-		$column++;
-		$worksheet->write($row, $column, ilExcelUtils::_convert_text($eval_data["TOTAL"]["MODE"]));
-		$column++;
-		$worksheet->write($row, $column, $eval_data["TOTAL"]["MODE_NR_OF_SELECTIONS"]);
-		$column++;
-		$worksheet->write($row, $column, ilExcelUtils::_convert_text(str_replace("<br />", " ", $eval_data["TOTAL"]["MEDIAN"])));
-		$column++;
-		$worksheet->write($row, $column, $eval_data["TOTAL"]["ARITHMETIC_MEAN"]);
-		$row++;
-		$add = 0;
-		switch ($export_label)
-		{
-			case 'label_only':
-			case 'title_only':
-				break;
-			default:
-				$add = 1;
-				break;
-		}
-		foreach ($eval_data as $evalkey => $evalvalue)
-		{
-			if (is_numeric($evalkey))
-			{
-				$worksheet->writeString($row, 1+$add, ilExcelUtils::_convert_text($evalvalue["ROW"]));
-				$worksheet->write($row, 3+$add, $evalvalue["USERS_ANSWERED"]);
-				$worksheet->write($row, 4+$add, $evalvalue["USERS_SKIPPED"]);
-				$worksheet->write($row, 5+$add, ilExcelUtils::_convert_text($evalvalue["MODE_VALUE"]));
-				$worksheet->write($row, 6+$add, ilExcelUtils::_convert_text($evalvalue["MODE"]));
-				$worksheet->write($row, 7+$add, $evalvalue["MODE_NR_OF_SELECTIONS"]);
-				$worksheet->write($row, 8+$add, ilExcelUtils::_convert_text(str_replace("<br />", " ", $evalvalue["MEDIAN"])));
-				$worksheet->write($row, 9+$add, $evalvalue["ARITHMETIC_MEAN"]);
-				$row++;
-			}
-		}
+        
+        if(stripos($worksheet->name, "(BSc)") > -1 || stripos($worksheet->name, "(MSc)") > -1)
+        {
+            // very specific
+            if($this->label == "subject_eval_icef" || $this->label == "subject_eval_hse")
+            {
+                $column = 0;
+                $worksheet->writeString($row, $column, ilExcelUtils::_convert_text(mb_substr($worksheet->name, 6)));
+                $column++;
+                $worksheet->writeNumber($row, $column, $eval_data["TOTAL"]["USERS_ANSWERED"]);
+                $column++;
+                
+                foreach ($eval_data as $evalkey => $evalvalue)
+                {
+                        if (is_numeric($evalkey))
+                        {
+                                $worksheet->writeNumber($row, $column, $evalvalue["ARITHMETIC_MEAN"]);
+                                $column++;
+                                $worksheet->writeNumber($row, $column, $evalvalue["STANDART_DEVIATION"]); #new
+                                $column++;
+                        }
+                }
+                $worksheet->writeNumber($row, $column, $eval_data["TOTAL"]["ARITHMETIC_MEAN"]);
+                $row++;
+            }
+            
+            // very specific
+            if(stripos($this->label, "lect_evalhse_") > -1)
+            {
+                $teacher_login = mb_substr($this->label, 13);
+                $teacher_name_query = $ilDB->query("SELECT CONCAT_WS(\" \", `lastname`, `firstname`) as `fullname` FROM `usr_data` WHERE `login`=\"{$teacher_login}\" LIMIT 1;");
+                $teacher_name = $ilDB->fetchAssoc($teacher_name_query)['fullname'];
+                $column = 0;
+                
+                $worksheet->writeString($row+3, $column, mb_substr($worksheet->name, 6));
+                $column++;
+                $worksheet->writeString($row+3, $column, "Lectures");
+                $column++;
+                $worksheet->writeString($row+3, $column, ilExcelUtils::_convert_text($teacher_name));
+                $column++;
+                $worksheet->writeNumber($row+3, $column, $eval_data["TOTAL"]["USERS_ANSWERED"]);
+                $column++;
+                
+                foreach ($eval_data as $evalkey => $evalvalue)
+                {
+                        if (is_numeric($evalkey))
+                        {
+                                $worksheet->writeNumber($row+3, $column, $evalvalue["ARITHMETIC_MEAN"]);
+                                $column++;
+                                $worksheet->writeNumber($row+3, $column, $evalvalue["STANDART_DEVIATION"]); #new
+                                $column++;
+                        }
+                }
+                $worksheet->writeNumber($row+3, $column, $eval_data["TOTAL"]["ARITHMETIC_MEAN"]);
+                $row++;
+            }
+            
+            if(stripos($this->label, "lect_evalicef_") > -1)
+            {
+                $teacher_login = mb_substr($this->label, 14);
+                $teacher_name_query = $ilDB->query("SELECT CONCAT_WS(\" \", `lastname`, `firstname`) as `fullname` FROM `usr_data` WHERE `login`=\"{$teacher_login}\" LIMIT 1;");
+                $teacher_name = $ilDB->fetchAssoc($teacher_name_query)['fullname'];
+                $column = 0;
+                
+                $worksheet->writeString($row+8, $column, mb_substr($worksheet->name, 4));
+                $column++;
+                $worksheet->writeString($row+8, $column, "Lectures");
+                $column++;
+                $worksheet->writeString($row+8, $column, ilExcelUtils::_convert_text($teacher_name));
+                $column++;
+                $worksheet->writeNumber($row+8, $column, $eval_data["TOTAL"]["USERS_ANSWERED"]);
+                $column++;
+                
+                $eval_icef_data = [];
+                foreach ($eval_data as $evalkey => $evalvalue)
+                {
+                    if (is_numeric($evalkey)) {$eval_icef_data[] = ["mean" => $evalvalue["ARITHMETIC_MEAN"], "stdev" => $evalvalue["STANDART_DEVIATION"]];}
+                }
+                foreach($eval_icef_data as $eval_icef_itemnum => $eval_icef_item)
+                {
+                    if(count($eval_icef_data) == 6 && $eval_icef_itemnum == 4)
+                    {
+                        $worksheet->writeString($row+8, $column, "n/a");
+                        $column++;
+                        $worksheet->writeString($row+8, $column, "n/a");
+                        $column++;
+                    }
+                    $worksheet->writeNumber($row+8, $column, $eval_icef_item["mean"]);
+                    $column++;
+                    $worksheet->writeNumber($row+8, $column, $eval_icef_item["stdev"]);
+                    $column++;
+                }
+                $worksheet->writeNumber($row+8, $column, $eval_data["TOTAL"]["ARITHMETIC_MEAN"]);
+            }
+            
+            if(stripos($this->label, "clt_evalhse_") > -1)
+            {
+                $teacher_login = mb_substr($this->label, 12);
+                $teacher_name_query = $ilDB->query("SELECT CONCAT_WS(\" \", `lastname`, `firstname`) as `fullname` FROM `usr_data` WHERE `login`=\"{$teacher_login}\" LIMIT 1;");
+                $teacher_name = $ilDB->fetchAssoc($teacher_name_query)['fullname'];
+                $column = 0;
+                
+                $worksheet->writeString($row+13, $column, mb_substr($worksheet->name, 6));
+                $column++;
+                $worksheet->writeString($row+13, $column, "Classes");
+                $column++;
+                $worksheet->writeString($row+13, $column, ilExcelUtils::_convert_text($teacher_name));
+                $column++;
+                $worksheet->writeNumber($row+13, $column, $eval_data["TOTAL"]["USERS_ANSWERED"]);
+                $column++;
+                
+                foreach ($eval_data as $evalkey => $evalvalue)
+                {
+                        if (is_numeric($evalkey))
+                        {
+                                $worksheet->writeNumber($row+13, $column, $evalvalue["ARITHMETIC_MEAN"]);
+                                $column++;
+                                $worksheet->writeNumber($row+13, $column, $evalvalue["STANDART_DEVIATION"]); #new
+                                $column++;
+                        }
+                }
+                $worksheet->writeNumber($row+13, $column, $eval_data["TOTAL"]["ARITHMETIC_MEAN"]);
+                $row++;
+            }
+            
+            
+            if(stripos($this->label, "clt_evalicef_") > -1)
+            {
+                $teacher_login = mb_substr($this->label, 13);
+                $teacher_name_query = $ilDB->query("SELECT CONCAT_WS(\" \", `lastname`, `firstname`) as `fullname` FROM `usr_data` WHERE `login`=\"{$teacher_login}\" LIMIT 1;");
+                $teacher_name = $ilDB->fetchAssoc($teacher_name_query)['fullname'];
+                $column = 0;
+                
+                $worksheet->writeString($row+25, $column, mb_substr($worksheet->name, 6));
+                $column++;
+                $worksheet->writeString($row+25, $column, "Classes");
+                $column++;
+                $worksheet->writeString($row+25, $column, ilExcelUtils::_convert_text($teacher_name));
+                $column++;
+                $worksheet->writeNumber($row+25, $column, $eval_data["TOTAL"]["USERS_ANSWERED"]);
+                $column++;
+                
+                $eval_icef_data = [];
+                foreach ($eval_data as $evalkey => $evalvalue)
+                {
+                    if (is_numeric($evalkey)) {$eval_icef_data[] = ["mean" => $evalvalue["ARITHMETIC_MEAN"], "stdev" => $evalvalue["STANDART_DEVIATION"]];}
+                }
+                foreach($eval_icef_data as $eval_icef_itemnum => $eval_icef_item)
+                {
+                    if(count($eval_icef_data) == 6 && $eval_icef_itemnum == 4)
+                    {
+                        $worksheet->writeString($row+25, $column, "n/a");
+                        $column++;
+                        $worksheet->writeString($row+25, $column, "n/a");
+                        $column++;
+                    }
+                    $worksheet->writeNumber($row+25, $column, $eval_icef_item["mean"]);
+                    $column++;
+                    $worksheet->writeNumber($row+25, $column, $eval_icef_item["stdev"]);
+                    $column++;
+                }
+                $worksheet->writeNumber($row+25, $column, $eval_data["TOTAL"]["ARITHMETIC_MEAN"]);
+            }
+            
+        }
+        else
+        {
+            switch ($export_label)
+            {
+                case 'label_only':
+                    $worksheet->writeString($row, $column, ilExcelUtils::_convert_text($this->label));
+                    break;
+                case 'title_only':
+                    $worksheet->writeString($row, $column, ilExcelUtils::_convert_text($this->getTitle()));
+                    break;
+                default:
+                    $worksheet->writeString($row, $column, ilExcelUtils::_convert_text($this->getTitle()));
+                    $column++;
+                    $worksheet->writeString($row, $column, ilExcelUtils::_convert_text($this->label));
+                    break;
+            }
+            $column++;
+            $worksheet->writeString($row, $column, ilExcelUtils::_convert_text(strip_tags($this->getQuestiontext())));
+            $column++;
+            $worksheet->writeString($row, $column, ilExcelUtils::_convert_text($this->lng->txt($eval_data["TOTAL"]["QUESTION_TYPE"])));
+            $column++;
+            $worksheet->write($row, $column, $eval_data["TOTAL"]["USERS_ANSWERED"]);
+            $column++;
+            $worksheet->write($row, $column, $eval_data["TOTAL"]["USERS_SKIPPED"]);
+            $column++;
+            $worksheet->write($row, $column, ilExcelUtils::_convert_text($eval_data["TOTAL"]["MODE_VALUE"]));
+            $column++;
+            $worksheet->write($row, $column, ilExcelUtils::_convert_text($eval_data["TOTAL"]["MODE"]));
+            $column++;
+            $worksheet->write($row, $column, $eval_data["TOTAL"]["MODE_NR_OF_SELECTIONS"]);
+            $column++;
+            $worksheet->write($row, $column, ilExcelUtils::_convert_text(str_replace("<br />", " ", $eval_data["TOTAL"]["MEDIAN"])));
+            $column++;
+            $worksheet->write($row, $column, $eval_data["TOTAL"]["ARITHMETIC_MEAN"]);
+            $column++; #new
+            $worksheet->write($row, $column, $eval_data["TOTAL"]["STANDART_DEVIATION"]); #new
+            $row++;
+            $add = 0;
+            switch ($export_label)
+            {
+                case 'label_only':
+                case 'title_only':
+                    break;
+                default:
+                    $add = 1;
+                    break;
+            }
+            foreach ($eval_data as $evalkey => $evalvalue)
+            {
+                if (is_numeric($evalkey))
+                {
+                    $worksheet->writeString($row, 1+$add, ilExcelUtils::_convert_text($evalvalue["ROW"]));
+                    $worksheet->write($row, 3+$add, $evalvalue["USERS_ANSWERED"]);
+                    $worksheet->write($row, 4+$add, $evalvalue["USERS_SKIPPED"]);
+                    $worksheet->write($row, 5+$add, ilExcelUtils::_convert_text($evalvalue["MODE_VALUE"]));
+                    $worksheet->write($row, 6+$add, ilExcelUtils::_convert_text($evalvalue["MODE"]));
+                    $worksheet->write($row, 7+$add, $evalvalue["MODE_NR_OF_SELECTIONS"]);
+                    $worksheet->write($row, 8+$add, ilExcelUtils::_convert_text(str_replace("<br />", " ", $evalvalue["MEDIAN"])));
+                    $worksheet->write($row, 9+$add, $evalvalue["ARITHMETIC_MEAN"]);
+                    $worksheet->write($row, 10+$add, $evalvalue["STANDART_DEVIATION"]); #new
+                    $row++;
+                }
+            }
+        }
 		return $row;
 	}
 	
@@ -1593,8 +1839,10 @@ class SurveyMatrixQuestion extends SurveyQuestion
 	*/
 	function setExportDetailsXLS(&$workbook, &$format_title, &$format_bold, &$eval_data, $export_label)
 	{
+        // CHANGES IN CORE @author Ivan Filatov 18 nov 2014
+        // add mean and standart deviation to excel
 		include_once ("./Services/Excel/classes/class.ilExcelUtils.php");
-		$worksheet =& $workbook->addWorksheet();
+		$worksheet =& $workbook->addWorksheet($this->label); # name sheet by label
 		$rowcounter = 0;
 		switch ($export_label)
 		{
@@ -1629,26 +1877,28 @@ class SurveyMatrixQuestion extends SurveyQuestion
 		$rowcounter++;
 
 		preg_match("/(.*?)\s+-\s+(.*)/", $eval_data["TOTAL"]["MODE"], $matches);
-		$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("mode")), $format_bold);
-		$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text($matches[1]));
-		$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("mode_text")), $format_bold);
-		$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text($matches[2]));
-		$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("mode_nr_of_selections")), $format_bold);
-		$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text($eval_data["TOTAL"]["MODE_NR_OF_SELECTIONS"]));
+		#$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("mode")), $format_bold);
+		#$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text($matches[1]));
+		#$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("mode_text")), $format_bold);
+		#$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text($matches[2]));
+		#$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("mode_nr_of_selections")), $format_bold);
+		#$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text($eval_data["TOTAL"]["MODE_NR_OF_SELECTIONS"]));
 		$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("median")), $format_bold);
 		$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text(str_replace("<br />", " ", $eval_data["TOTAL"]["MEDIAN"])));
+        $worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("arithmetic_mean")), $format_bold); #new
+		$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text($eval_data["TOTAL"]["ARITHMETIC_MEAN"])); #new
 		$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("categories")), $format_bold);
 		$worksheet->write($rowcounter, 1, ilExcelUtils::_convert_text($this->lng->txt("title")), $format_title);
 		$worksheet->write($rowcounter, 2, ilExcelUtils::_convert_text($this->lng->txt("value")), $format_title);
 		$worksheet->write($rowcounter, 3, ilExcelUtils::_convert_text($this->lng->txt("category_nr_selected")), $format_title);
-		$worksheet->write($rowcounter++, 4, ilExcelUtils::_convert_text($this->lng->txt("svy_fraction_of_selections")), $format_title);
+		$worksheet->write($rowcounter++, 4, ilExcelUtils::_convert_text($this->lng->txt("percentage_of_selections")), $format_title);
 
 		foreach ($eval_data["TOTAL"]["variables"] as $key => $value)
 		{
 			$worksheet->write($rowcounter, 1, ilExcelUtils::_convert_text($value["title"]));
 			$worksheet->write($rowcounter, 2, $key+1);
 			$worksheet->write($rowcounter, 3, ilExcelUtils::_convert_text($value["selected"]));
-			$worksheet->write($rowcounter++, 4, ilExcelUtils::_convert_text($value["percentage"]), $format_percent);
+			$worksheet->write($rowcounter++, 4, mb_substr(ilExcelUtils::_convert_text($value["percentage"]), 2, 2).",".mb_substr(ilExcelUtils::_convert_text($value["percentage"]), 4, 2)."%", $format_percent);
 		}
 		
 		foreach ($eval_data as $evalkey => $evalvalue)
@@ -1664,19 +1914,23 @@ class SurveyMatrixQuestion extends SurveyQuestion
 				$rowcounter = $rowcounter + 3;
 		
 				preg_match("/(.*?)\s+-\s+(.*)/", $evalvalue["MODE"], $matches);
-				$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("mode")), $format_bold);
-				$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text($matches[1]));
-				$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("mode_text")), $format_bold);
-				$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text($matches[2]));
-				$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("mode_nr_of_selections")), $format_bold);
-				$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text($evalvalue["MODE_NR_OF_SELECTIONS"]));
+				#$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("mode")), $format_bold);
+				#$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text($matches[1]));
+				#$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("mode_text")), $format_bold);
+				#$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text($matches[2]));
+				#$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("mode_nr_of_selections")), $format_bold);
+				#$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text($evalvalue["MODE_NR_OF_SELECTIONS"]));
 				$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("median")), $format_bold);
 				$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text(str_replace("<br />", " ", $evalvalue["MEDIAN"])));
+                $worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("arithmetic_mean")), $format_bold); #new
+				$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text(str_replace("<br />", " ", $evalvalue["ARITHMETIC_MEAN"]))); #new
+                $worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text("St.dev."), $format_bold); #new
+				$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text(str_replace("<br />", " ", $evalvalue["STANDART_DEVIATION"]))); #new
 				$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("categories")), $format_bold);
 				$worksheet->write($rowcounter, 1, ilExcelUtils::_convert_text($this->lng->txt("title")), $format_title);
 				$worksheet->write($rowcounter, 2, ilExcelUtils::_convert_text($this->lng->txt("value")), $format_title);
 				$worksheet->write($rowcounter, 3, ilExcelUtils::_convert_text($this->lng->txt("category_nr_selected")), $format_title);
-				$worksheet->write($rowcounter++, 4, ilExcelUtils::_convert_text($this->lng->txt("svy_fraction_of_selections")), $format_title);
+				$worksheet->write($rowcounter++, 4, ilExcelUtils::_convert_text($this->lng->txt("percentage_of_selections")), $format_title);
 		
 				foreach ($evalvalue["variables"] as $key => $value)
 				{
@@ -1710,7 +1964,7 @@ class SurveyMatrixQuestion extends SurveyQuestion
 		$format_center->setColor('black');
 		$format_center->setAlign('center');
 		
-		$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("overview")), $format_bold);
+		$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("summary")), $format_bold); #overview -> summary
 		// title row with variables
 		$rowcounter++;
 		$counter = 0;

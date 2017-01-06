@@ -652,14 +652,52 @@ class SurveySingleChoiceQuestion extends SurveyQuestion
 		ksort($cumulated, SORT_NUMERIC);
 		$median = array();
 		$total = 0;
+		
+		// CHANGES IN CORE @author Ivan Filatov 17 nov 2014
+		// add mean and stdev calculation
+		$arithmetic_nom = 0; // my
+		$arithmetic_denom = 0; // my
+		$arithmetic_mean = 0; // my
+		$var_sqsum = 0; // my
+		$stdev = 0; // my
+				
 		foreach ($cumulated as $value => $key)
 		{
+			// we use indices as values and calculate their mean and stdev
+			// e.g. in scale (disagree-neutral-agree)
+			// there will be 1 for disagree, 2 for neutral etc.
+			// and mean will be calculated out of these values
+			if(!$this->categories->getCategory($value)->neutral)
+			{
+			    $arithmetic_nom += ($value+1)*$key; // my
+			    $arithmetic_denom += $key; // my
+			    $var_sqsum += ($value+1)*($value+1)*$key; // my
+			}
+			
 			$total += $key;
 			for ($i = 0; $i < $key; $i++)
 			{
 				array_push($median, $value+1);
 			}
 		}
+		
+		// mean and stdev
+		if($arithmetic_denom > 1)
+		{
+			$arithmetic_mean = $arithmetic_nom / $arithmetic_denom;
+			$stdev = sqrt(($arithmetic_denom/($arithmetic_denom-1))*($var_sqsum/$arithmetic_denom - $arithmetic_mean*$arithmetic_mean));
+		}
+		elseif($arithmetic_denom == 1)
+		{
+			$arithmetic_mean = $arithmetic_nom;
+			$stdev = 0;
+		}
+		else
+		{
+			$arithmetic_mean = 0;
+			$stdev = 0;
+		}
+		
 		if ($total > 0)
 		{
 			if (($total % 2) == 0)
@@ -679,8 +717,11 @@ class SurveySingleChoiceQuestion extends SurveyQuestion
 		{
 			$median_value = "";
 		}
-		$result_array["ARITHMETIC_MEAN"] = "";
-		$result_array["MEDIAN"] = $median_value;
+		// CHANGES IN CORE @author Ivan Filatov 18 nov 2014
+		$result_array["ARITHMETIC_MEAN"] = round($arithmetic_mean, 2); // mean of indices
+        $result_array["STANDART_DEVIATION"] = round($stdev, 2); // stdev
+        $median_cat = $this->categories->getCategoryForScale($median_value); // CHANGES IN CORE @author Ivan Filatov 18 nov 2014
+		$result_array["MEDIAN"] = $median_cat->title; // value instead of index
 		$result_array["QUESTION_TYPE"] = "SurveySingleChoiceQuestion";
 		return $result_array;
 	}
@@ -696,8 +737,10 @@ class SurveySingleChoiceQuestion extends SurveyQuestion
 	*/
 	function setExportDetailsXLS(&$workbook, &$format_title, &$format_bold, &$eval_data, $export_label)
 	{
+		// CHANGES IN CORE @author Ivan Filatov 18 nov 2014
+		// add mean and standart deviation to excel
 		include_once ("./Services/Excel/classes/class.ilExcelUtils.php");
-		$worksheet =& $workbook->addWorksheet();
+		$worksheet =& $workbook->addWorksheet($this->label); # name sheet by label
 		$rowcounter = 0;
 		switch ($export_label)
 		{
@@ -740,6 +783,10 @@ class SurveySingleChoiceQuestion extends SurveyQuestion
 		$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text($eval_data["MODE_NR_OF_SELECTIONS"]));
 		$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("median")), $format_bold);
 		$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text(str_replace("<br />", " ", $eval_data["MEDIAN"])));
+		$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("arithmetic_mean")), $format_bold);
+		$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text(str_replace("<br />", " ", $eval_data["ARITHMETIC_MEAN"])));
+		$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text("St.dev."), $format_bold);
+		$worksheet->write($rowcounter++, 1, ilExcelUtils::_convert_text(str_replace("<br />", " ", $eval_data["STANDART_DEVIATION"])));
 		$worksheet->write($rowcounter, 0, ilExcelUtils::_convert_text($this->lng->txt("categories")), $format_bold);
 		$worksheet->write($rowcounter, 1, ilExcelUtils::_convert_text($this->lng->txt("title")), $format_title);
 		$worksheet->write($rowcounter, 2, ilExcelUtils::_convert_text($this->lng->txt("value")), $format_title);
@@ -752,7 +799,7 @@ class SurveySingleChoiceQuestion extends SurveyQuestion
 			$category = $this->categories->getCategory($key);
 			$worksheet->write($rowcounter, 2, $category->scale);
 			$worksheet->write($rowcounter, 3, ilExcelUtils::_convert_text($value["selected"]));
-			$worksheet->write($rowcounter++, 4, ilExcelUtils::_convert_text($value["percentage"]), $format_percent);
+			$worksheet->write($rowcounter++, 4, mb_substr(ilExcelUtils::_convert_text($value["percentage"]), 2, 2).",".mb_substr(ilExcelUtils::_convert_text($value["percentage"]), 4, 2)."%", $format_percent);
 		}
 		
 		// add text answers to detailed results

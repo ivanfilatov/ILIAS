@@ -3174,6 +3174,8 @@ class ilObjCourseGUI extends ilContainerGUI
 		
 		$this->checkPermission('leave');
 		
+		// CHANGES IN CORE
+		/*
 		if($this->object->getMembersObject()->isLastAdmin($ilUser->getId()))
 		{
 			ilUtil::sendFailure($this->lng->txt('crs_min_one_admin'));
@@ -3189,7 +3191,12 @@ class ilObjCourseGUI extends ilContainerGUI
 		$cgui->setFormAction($this->ctrl->getFormAction($this));
 		$cgui->setCancel($this->lng->txt("cancel"), "cancel");
 		$cgui->setConfirm($this->lng->txt("crs_unsubscribe"), "performUnsubscribe");		
-		$this->tpl->setContent($cgui->getHTML());							
+		$this->tpl->setContent($cgui->getHTML());
+		*/
+		
+		ilUtil::sendFailure($this->lng->txt('permission_denied'));
+		$this->viewObject();
+		return false;
 	}
 	
 	/**
@@ -3577,7 +3584,9 @@ class ilObjCourseGUI extends ilContainerGUI
 									 $this->ctrl->getLinkTarget($this, "trash"), "trash", get_class($this));
 			}
 		}
+		// CHANGES IN CORE
 		// Join/Leave
+		/*
 		if($ilAccess->checkAccess('join','',$this->ref_id)
 			and !$this->object->getMemberObject()->isAssigned())
 		{
@@ -3609,6 +3618,7 @@ class ilObjCourseGUI extends ilContainerGUI
 								 "");
 			
 		}
+		*/
 	}
 	
 	function fetchPrintSubscriberData($a_members)

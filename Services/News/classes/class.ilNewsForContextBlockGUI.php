@@ -110,8 +110,8 @@ class ilNewsForContextBlockGUI extends ilBlockGUI
 				$forum_grouping = false;
 			}
 	
-			
-			$news_data = $news_item->getNewsForRefId($_GET["ref_id"], false, false, 0,
+			// CHANGES IN CORE @author Ivan Filatov 30 jul 2015
+			$news_data = $news_item->getNewsForRefId($_GET["ref_id"], false, true, 0, // third param was false here but we like only pure news
 				$prevent_aggregation, $forum_grouping);
 
 			$this->acache->storeEntry($ilUser->getId().":".$_GET["ref_id"],
@@ -603,7 +603,7 @@ if (empty(self::$st_data))
 				{
 					// this should actually not happen, since news entries 
 					// should be deleted when the user is going to be removed
-					$displayname = "&lt;". strtolower($lng->txt("deleted")) ."&gt;";
+					$displayname = "&lt;". $lng->txt("deleted") ."&gt;"; // CHANGES IN CORE @author Ivan Filatov 24 aug 2015
 				}
 			
 				$tpl->setCurrentBlock("user_info");

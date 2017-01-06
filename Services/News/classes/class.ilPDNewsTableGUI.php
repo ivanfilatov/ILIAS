@@ -210,13 +210,13 @@ class ilPDNewsTableGUI extends ilTable2GUI
 		if ($a_set["content"] != "")
 		{
 			$this->tpl->setCurrentBlock("content");
-			$this->tpl->setVariable("VAL_CONTENT", ilUtil::makeClickable($a_set["content"], true));
+			$this->tpl->setVariable("VAL_CONTENT", ilUtil::makeClickable("<br />".nl2br($a_set["content"]), true)); // CHANGES IN CORE @author Ivan Filatov 17 aug 2015 - add nl2br and additional br
 			$this->tpl->parseCurrentBlock();
 		}
 		if ($a_set["content_long"] != "")
 		{
 			$this->tpl->setCurrentBlock("long");
-			$this->tpl->setVariable("VAL_LONG_CONTENT", ilUtil::makeClickable($a_set["content_long"], true));
+			$this->tpl->setVariable("VAL_LONG_CONTENT", ilUtil::makeClickable("<br />".nl2br($a_set["content_long"]), true)); // CHANGES IN CORE @author Ivan Filatov 17 aug 2015 - add nl2br and additional br
 			$this->tpl->parseCurrentBlock();
 		}
 		if ($a_set["update_date"] != $a_set["creation_date"])	// update date

@@ -16,6 +16,11 @@ class ilUsersGalleryParticipants extends ilAbstractGalleryUsers
 	 * @var array
 	 */
 	protected $users = array();
+	
+	// CHANGES IN CORE
+	public $defaultAdmins;
+	public $defaultTutors;
+	public $defaultMembers;
 
 	/**
 	 * @param ilParticipants $participants
@@ -68,6 +73,11 @@ class ilUsersGalleryParticipants extends ilAbstractGalleryUsers
 	 */
 	public function getGalleryUsers()
 	{
+		// CHANGES IN CORE
+		$this->defaultAdmins = $this->participants->getAdmins();
+		$this->defaultTutors = $this->participants->getTutors();
+		$this->defaultMembers = $this->participants->getMembers();
+		
 		$ordered_user = $this->getSortedUsers($this->participants->getAdmins());
 		$ordered_user = array_merge($ordered_user, $this->getSortedUsers($this->participants->getTutors()));
 		$ordered_user = array_merge($ordered_user, $this->getSortedUsers($this->participants->getMembers()));

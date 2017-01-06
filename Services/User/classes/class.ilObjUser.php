@@ -471,6 +471,13 @@ class ilObjUser extends ilObject
 		{
 			$this->setInactivationDate(null);
 		}
+        
+        // CHANGES IN CORE @author Ivan Filatov 25 june 2014
+        // Hardcoded bind of ext_account
+        if($this->getExternalAccount() == "")
+        {
+            $this->setExternalAccount(strtolower($this->login));
+        }
 
 		$insert_array = array(
 			"usr_id" => array("integer", $this->id),
@@ -535,6 +542,23 @@ class ilObjUser extends ilObject
 		$this->addUserDefinedFieldEntry();
 		// ... and update
 		$this->updateUserDefinedFields();
+        
+        // CHANGES IN CORE @author Ivan Filatov 19 august 2014
+        // making some public profile fields visible by default
+        $this->setPref("public_profile", "y"); // public profile
+        $this->setPref("public_upload", "y"); // public photo???
+        $this->setPref("public_gender", "y"); // public gender
+        #$this->setPref("public_birthday", "y"); // public birthday
+        $this->setPref("public_udf_1", "y"); // public english name
+        $this->writePrefs();
+        
+        // CHANGES IN CORE @author Ivan Filatov 25 june 2014
+        // Hardcoding of LDAP user creation when creating ILIAS user
+        // Prerequisite: class SimpleLDAP present
+        if($this->getExternalAccount() <> "")
+        {
+            $this->addLDAPuser($insert_array);
+        }
 
 		// CREATE ENTRIES FOR MAIL BOX
 		include_once ("Services/Mail/classes/class.ilMailbox.php");
@@ -665,6 +689,14 @@ class ilObjUser extends ilObject
 
 		// update user defined fields
 		$this->updateUserDefinedFields();
+        
+        // CHANGES IN CORE @author Ivan Filatov 25 june 2014
+        // Hardcoding of LDAP user update when updating ILIAS user
+        // Prerequisite: class SimpleLDAP present
+        if($this->getExternalAccount() <> "")
+        {
+            $this->modifyLDAPuser($update_array);
+        }
 
 		parent::update();
         parent::updateOwner();
@@ -935,6 +967,13 @@ class ilObjUser extends ilObject
 			array('text', 'text', 'text', 'integer'),
 			array($this->getPasswd(), $this->getPasswordEncodingType(), $this->getPasswordSalt(), $this->getId())
 		);
+        
+        // CHANGES IN CORE @author Ivan Filatov 25 june 2014
+        // Hardcoded update of LDAP password when ILIAS password is changed
+        if($this->getExternalAccount() <> "")
+        {
+            self::pswdLDAPuser($this->ext_account, $raw);
+        }
 
 		return true;
 	}
@@ -1418,6 +1457,10 @@ class ilObjUser extends ilObject
 		
 		// Reset owner
 		$this->resetOwner();
+        
+        // CHANGES IN CORE @author Ivan Filatov 25 june 2014
+        // Hardcoded delete of LDAP user when ILIAS user is deleted
+        $this->deleteLDAPuser($this->ext_account);
 
 		// Trigger deleteUser Event
 		global $ilAppEventHandler;
@@ -5842,5 +5885,227 @@ class ilObjUser extends ilObject
 		
 		return $res;
 	}
+    
+/****************************************
+ *                                      *
+ * Here comes hardcoded part of the     *
+ * system, direct link with LDAP server *
+ *                                      *
+ * @author Ivan Filatov                 *
+ ****************************************/
+
+        
+    // CHANGES IN CORE @author Ivan Filatov 25 june 2014
+    public function addLDAPuser($data)
+    {
+        require_once 'Services/User/classes/class.SimpleLDAP.php';
+        
+        include_once("./Services/User/classes/class.ilUserDefinedData.php");
+        $udata = new ilUserDefinedData($this->getId());
+            
+        $uid = $data['ext_account'][1];
+        $uidNumber = (int)$data['usr_id'][1]+100000;
+        
+        $ICEFINFO_SID = 'S-1-5-21-2109522240-231498690-3242073413';
+        $ldap_pass = '{MD5}'.base64_encode(md5(iconv("cp1251","UTF-8",$this->passwd),true));
+        $sambaNTPass = strtoupper(hash('md4', iconv("cp1251","UTF-16LE",$this->passwd)));
+        $gidNumber = ($uid == "sysadmin") ? '512' : '513'; // Domain Admins for "sysadmin" / Domain Users
+        
+        $defaults = array(
+            //basics
+            'objectClass' => array('top', 'person', 'organizationalPerson', 'inetOrgPerson', 'posixAccount', 'shadowAccount', 'sambaSamAccount'),
+            
+            //id stuff
+            'uid' => $uid,
+            'cn' => $uid,
+            'uidNumber' => $uidNumber,
+            'gidNumber' => $gidNumber,
+            
+            //info stuff
+            'sn' => $data['lastname'][1],
+            'givenName' => $data['firstname'][1],
+            'displayName' => ($udata->user_data['f_1']) ? $udata->user_data['f_1'] : "",
+            'mail' => $data['email'][1],
+            'mobile' => $data['phone_mobile'][1],
+            
+            //posix stuff
+            'gecos' => 'System User',
+            'loginShell' => '/bin/bash',
+            'homeDirectory' => '/data/profiles/home/'.$uid,
+            
+            // samba stuff
+            'sambaAcctFlags' => '[XU]',
+            'sambaDomainName' => 'ICEFINFO',
+            'sambaSID' =>  $ICEFINFO_SID.'-'.(($uidNumber*2)+1000),
+            'sambaPrimaryGroupSID' => $ICEFINFO_SID.'-'.$gidNumber,
+            'sambaPwdLastSet' => time(),
+            'sambaPwdMustChange' => '2147483647', // year 2038
+            'sambaKickoffTime' => '2147483647', // year 2038
+            
+            //shadow stuff
+            'shadowExpire' => '99999', // year 2100 (or somewhat)
+            'shadowInactive' => '99999',
+            'shadowMax' => '99999',
+            'shadowFlag' => '0',
+            'shadowLastChange' => '1', // required to be greater than zero for user PAM authentication to work
+            'shadowMin' => '0',
+            'shadowWarning' => '0',
+            'shadowLastChange' => floor(time()/86400),
+            
+            //passwords (in the end because when changed, they will appear here)
+            'userPassword' => $ldap_pass,
+            'sambaNTPassword' => $sambaNTPass,
+        );
+        
+        $ldap = new SimpleLDAP('192.168.0.180', 389, 3);
+        $ldap->dn = "ou=people,dc=icefinfo,dc=local";
+        $ldap->adn = "cn=admin,dc=icefinfo,dc=local";
+        $ldap->apass = "ldaptestpass";
+        
+        if($ldap->getUsers('uid='.$defaults['cn'])['count'] == 0)
+        {
+            return $ldap->addUser($uid, $defaults);
+        }
+        else
+        {
+            return true;
+        }
+    }
+    
+    // CHANGES IN CORE @author Ivan Filatov 25 june 2014
+    public function modifyLDAPuser($data)
+    {
+        require_once 'Services/User/classes/class.SimpleLDAP.php';
+        
+        include_once("./Services/User/classes/class.ilUserDefinedData.php");
+        $udata = new ilUserDefinedData($this->getId());
+            
+        $uid = $data['ext_account'][1];
+        $uidNumber = $this->id+100000; //dunno why. i just decided it so.
+        
+        $ICEFINFO_SID = 'S-1-5-21-2109522240-231498690-3242073413';
+        $gidNumber = ($uid == "sysadmin") ? '512' : '513'; // Domain Admins for "sysadmin" / Domain Users
+        
+        $defaults = array(                
+            //basics
+            'objectClass' => array('top', 'person', 'organizationalPerson', 'inetOrgPerson', 'posixAccount', 'shadowAccount', 'sambaSamAccount'),
+            
+            //id stuff
+            'uid' => $uid,
+            'cn' => $uid,
+            'uidNumber' => $uidNumber,
+            'gidNumber' => $gidNumber, 
+            
+            //info stuff
+            'sn' => $data['lastname'][1],
+            'givenName' => $data['firstname'][1],
+            'displayName' => ($udata->user_data['f_1']) ? $udata->user_data['f_1'] : "", // english name
+            'mail' => $data['email'][1],
+            'mobile' => $data['phone_mobile'][1],
+            
+            //posix stuff
+            'gecos' => 'System User',
+            'loginShell' => '/bin/bash',
+            'homeDirectory' => '/data/profiles/home/'.$uid,
+            
+            // samba stuff
+            'sambaAcctFlags' => '[XU]',
+            'sambaDomainName' => 'ICEFINFO',
+            'sambaSID' => $ICEFINFO_SID.'-'.(($uidNumber*2)+1000),
+            'sambaPrimaryGroupSID' => $ICEFINFO_SID.'-'.$gidNumber,
+            'sambaPwdLastSet' => time(),
+            'sambaPwdMustChange' => '2147483647', // year 2038
+            'sambaKickoffTime' => '2147483647', // year 2038
+            
+            //shadow stuff
+            'shadowExpire' => '99999', // year 2100 (or somewhat)
+            'shadowInactive' => '99999',
+            'shadowMax' => '99999',
+            'shadowFlag' => '0',
+            'shadowLastChange' => '1', // required to be greater than zero for user PAM authentication to work
+            'shadowMin' => '0',
+            'shadowWarning' => '0',
+            'shadowLastChange' => floor(time()/86400),
+            
+            
+            #'userPassword' => $ldap_pass,
+            #'sambaNTPassword' => $sambaNTPass,
+            # they should be here but i'm still looking for ideas...
+        );
+        
+        
+        
+        $ldap = new SimpleLDAP('192.168.0.180', 389, 3);
+        $ldap->dn = "ou=people,dc=icefinfo,dc=local";
+        $ldap->adn = "cn=admin,dc=icefinfo,dc=local";
+        $ldap->apass = "ldaptestpass";
+        
+        //passwords (in the end because when changed, they will appear here)
+        if(strlen($_POST['passwd'])) # i promise not to use post array any more...
+        {
+            $ldap_pass = '{MD5}'.base64_encode(md5(iconv("cp1251","UTF-8",$this->passwd),true));
+            $sambaNTPass = strtoupper(hash('md4', iconv("cp1251","UTF-16LE",$this->passwd)));
+            $defaults['userPassword'] = $ldap_pass;
+            $defaults['sambaNTPassword'] = $sambaNTPass;
+        }
+        else
+        {
+            $pswd_check = $ldap->getUsers('uid='.$defaults['cn']);
+            $defaults['userPassword'] = $pswd_check[0]['userpassword'][0];
+            $defaults['sambaNTPassword'] = $pswd_check[0]['sambantpassword'][0];
+        }
+        
+        if($ldap->getUsers('uid='.$defaults['cn'])['count'] == 0)
+        {
+            return $ldap->addUser($uid, $defaults);
+        }
+        else
+        {
+            return $ldap->modifyUser($uid, $defaults);
+        }
+    }
+    
+    // CHANGES IN CORE @author Ivan Filatov 25 june 2014
+    public function deleteLDAPuser($uid)
+    {
+        require_once 'Services/User/classes/class.SimpleLDAP.php';
+        
+        $ldap = new SimpleLDAP('192.168.0.180', 389, 3);
+        $ldap->dn = "ou=people,dc=icefinfo,dc=local";
+        $ldap->adn = "cn=admin,dc=icefinfo,dc=local";
+        $ldap->apass = "ldaptestpass";
+        
+        if($ldap->getUsers('uid='.$uid)['count'] == 0)
+        {
+            return true;
+        }
+        else
+        {
+            return $ldap->removeUser($uid);
+        }
+    }
+    
+    // CHANGES IN CORE @author Ivan Filatov 25 june 2014
+    public static function pswdLDAPuser($uid, $pswd_plaintext)
+    {
+        require_once 'Services/User/classes/class.SimpleLDAP.php';
+        
+        $ldap_pass = '{MD5}'.base64_encode(md5(iconv("cp1251","UTF-8",$pswd_plaintext),true));
+        $sambaNTPass= strtoupper(hash('md4', iconv("cp1251","UTF-16LE",$pswd_plaintext)));
+        
+        $defaults = array(                
+            //passwords (in the end because when changed, they will appear here)
+            'userPassword' => $ldap_pass,
+            'sambaNTPassword' => $sambaNTPass,
+        );
+        
+        $ldap = new SimpleLDAP('192.168.0.180', 389, 3);
+        $ldap->dn = "ou=people,dc=icefinfo,dc=local";
+        $ldap->adn = "cn=admin,dc=icefinfo,dc=local";
+        $ldap->apass = "ldaptestpass";
+        
+        return $ldap->modifyUser($uid, $defaults);
+    }
+    
 } // END class ilObjUser
 ?>

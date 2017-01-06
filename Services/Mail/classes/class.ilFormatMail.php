@@ -191,14 +191,16 @@ class ilFormatMail extends ilMail
 		{
 			if(substr($lines[$i],0,1) != '>')
 			{
-				$formatted[] = wordwrap($lines[$i],$linebreak,chr(10));
+				$formatted[] = wordwrap($lines[$i],$linebreak/*,chr(10)*/); // CHANGES IN CORE
 			}
 			else
 			{
 				$formatted[] = $lines[$i];
 			}
 		}
-		$formatted = implode(chr(10),$formatted);
+		// CHANGES IN CORE
+		#$formatted = implode(chr(10),$formatted);
+		$formatted = implode("<br />",$formatted);
 #		debug($formatted);
 		return $formatted;
 	}

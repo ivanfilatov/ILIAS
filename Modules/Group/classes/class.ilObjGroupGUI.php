@@ -69,7 +69,7 @@ class ilObjGroupGUI extends ilContainerGUI
 
 			case 'ilusersgallerygui':
 				$is_participant = (bool)ilGroupParticipants::_isParticipant($this->ref_id, $ilUser->getId());
-				if(!$ilAccess->checkAccess('write', '', $this->ref_id) && !$is_participant)
+				if(!$ilAccess->checkAccess('read', '', $this->ref_id) && !$is_participant) // CHANGES IN CORE
 				{
 					$ilErr->raiseError($this->lng->txt('msg_no_perm_read'), $ilErr->MESSAGE);
 				}
@@ -321,7 +321,10 @@ class ilObjGroupGUI extends ilContainerGUI
 				}
 				if(!$cmd)
 				{
-					$cmd = 'view';
+					// CHANGES IN CORE
+					// set membersGallery as default tab
+					$cmd = 'jump2UsersGallery';
+					#$cmd = 'view';  // initially
 				}
 				$cmd .= 'Object';
 				$this->$cmd();
@@ -1670,6 +1673,8 @@ class ilObjGroupGUI extends ilContainerGUI
 		
 		$this->checkPermission('leave');
 		
+		// CHANGES IN CORE
+		/*
 		$part = ilGroupParticipants::_getInstanceByObjId($this->object->getId());
 		if($part->isLastAdmin($ilUser->getId()))
 		{
@@ -1686,7 +1691,12 @@ class ilObjGroupGUI extends ilContainerGUI
 		$cgui->setFormAction($this->ctrl->getFormAction($this));
 		$cgui->setCancel($this->lng->txt("cancel"), "cancel");
 		$cgui->setConfirm($this->lng->txt("grp_btn_unsubscribe"), "unsubscribe");		
-		$this->tpl->setContent($cgui->getHTML());	
+		$this->tpl->setContent($cgui->getHTML());
+		*/
+		
+		ilUtil::sendFailure($this->lng->txt('permission_denied'));
+		$this->viewObject();
+		return false;
 	}
 	
 	/**
@@ -1701,6 +1711,8 @@ class ilObjGroupGUI extends ilContainerGUI
 		
 		$this->checkPermission('leave');
 		
+		// CHANGES IN CORE
+		/*
 		$this->object->members_obj->delete($ilUser->getId());
 		
 		include_once './Modules/Group/classes/class.ilGroupMembershipMailNotification.php';
@@ -1717,6 +1729,11 @@ class ilObjGroupGUI extends ilContainerGUI
 		$ilCtrl->setParameterByClass("ilrepositorygui", "ref_id",
 			$tree->getParentId($this->object->getRefId()));
 		$ilCtrl->redirectByClass("ilrepositorygui", "");
+		*/
+		
+		ilUtil::sendFailure($this->lng->txt('permission_denied'));
+		$this->viewObject();
+		return false;
 	}
 	
 
@@ -1841,7 +1858,7 @@ class ilObjGroupGUI extends ilContainerGUI
 		if ($rbacsystem->checkAccess('read',$this->ref_id))
 		{
 			$tabs_gui->addTab("view_content", $lng->txt("content"),
-				$this->ctrl->getLinkTarget($this, ""));
+				$this->ctrl->getLinkTarget($this, "view")); // CHANGES IN CORE
 		}
 		if ($rbacsystem->checkAccess('visible',$this->ref_id))
 		{
@@ -1868,7 +1885,8 @@ class ilObjGroupGUI extends ilContainerGUI
 		{
 			$tabs_gui->addTarget('members', $this->ctrl->getLinkTarget($this, 'members'), array(), get_class($this));
 		}
-		else if($is_participant)
+		else // CHANGES IN CORE
+		#else if($is_participant)
 		{
 			$this->tabs_gui->addTarget(
 				'members',
@@ -1911,7 +1929,10 @@ class ilObjGroupGUI extends ilContainerGUI
 		*/
 		// parent tabs (all container: edit_permission, clipboard, trash
 		parent::getTabs($tabs_gui);
-
+		
+		// CHANGES IN CORE
+		// hide leave/join tabs
+		/*
 		if($ilAccess->checkAccess('join','',$this->object->getRefId()) and
 			!$this->object->members_obj->isAssigned($ilUser->getId()))
 		{
@@ -1942,6 +1963,7 @@ class ilObjGroupGUI extends ilContainerGUI
 								 '',
 								 "");
 		}
+		*/
 	}
 
 	// IMPORT FUNCTIONS

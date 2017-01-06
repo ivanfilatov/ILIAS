@@ -790,7 +790,12 @@ class ilMailFolderGUI
 		$form->addItem($date);
 
 		$message = new ilCustomInputGUI($this->lng->txt('message'));
-		$message->setHtml(ilUtil::htmlencodePlainString($mailData['m_message'], true));
+		// CHANGES IN CORE
+		// work with \n and <br />
+		$adopted_message_text = str_replace("\n", " ", $mailData['m_message']);
+		$adopted_message_text = str_replace("  ", " ", $adopted_message_text);
+		$adopted_message_text = str_replace("<br />", "\n", $adopted_message_text);
+		$message->setHtml(ilUtil::htmlencodePlainString($adopted_message_text, true));
 		$form->addItem($message);
 
 		if($mailData['attachments'])
