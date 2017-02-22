@@ -1342,7 +1342,7 @@ Message:\n{$message_to_log}
 	/**
 	* get user_ids
 	* @param    string recipients seperated by ','
-	* @return	string error message
+	* @return	array error message
 	*/
 	function getUserIds($a_recipients)
 	{
@@ -1432,7 +1432,7 @@ Message:\n{$message_to_log}
 						foreach ($grp_object->getGroupMemberIds() as $id)
 						{
 							$ids[] = $id;
-							$foundUserIds = $id;
+							$foundUserIds[] = $id;
 						}
 
 						ilLoggerFactory::getLogger('mail')->debug(sprintf(

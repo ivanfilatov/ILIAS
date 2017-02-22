@@ -265,3 +265,11 @@ $ilDB->modifyTableColumn('exc_returned', 'mimetype', array(
 <?php
 $ilCtrlStructureReader->getStructure();
 ?>
+<#22>
+<?php
+$ilCtrlStructureReader->getStructure();
+?>
+<#23>
+<?php
+	$ilCtrlStructureReader->getStructure();
+?>
