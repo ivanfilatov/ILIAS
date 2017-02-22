@@ -304,12 +304,17 @@ class ilPersonalDesktopGUI
 		// CHANGES IN CORE @author Ivan Filatov 07 oct 2015 - try to add updates to overview
 		
 		include_once 'Services/Membership/classes/class.ilParticipants.php';
-		$items = array();
+		include_once 'Modules/Course/classes/class.ilObjCourseAccess.php';
+
 		$items = ilParticipants::_getMembershipByType($ilUser->getId(), 'crs');
 		
 		$references = array();
 		foreach($items as $key => $obj_id)
 		{
+			if (ilObjCourseAccess::_isOffline($obj_id)) {
+				continue;
+			}
+
 			$item_references = ilObject::_getAllReferences($obj_id);
 			foreach($item_references as $ref_id)
 			{
