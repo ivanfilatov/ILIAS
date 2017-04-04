@@ -6,6 +6,7 @@ include_once './Services/User/classes/class.ilObjUser.php';
 include_once "Services/Mail/classes/class.ilMail.php";
 include_once 'Services/Mail/classes/class.ilMailGlobalServices.php';
 include_once 'Services/UIComponent/AdvancedSelectionList/classes/class.ilAdvancedSelectionListGUI.php';
+include_once 'Modules/Survey/classes/class.ilObjSurveyAccess.php';
 
 /**
 * GUI class for personal desktop
