@@ -71,32 +71,56 @@ class ilExSubmissionTextGUI extends ilExSubmissionBaseGUI
 			
 		if(!$a_read_only)
 		{
-			$text = new ilTextAreaInputGUI($this->lng->txt("exc_your_text"), "atxt");
-			$text->setRequired((bool)$this->submission->getAssignment()->getMandatory());				
-			$text->setRows(40);
-			$form->addItem($text);
-			
-			// custom rte tags
-			$text->setUseRte(true);		
-			$text->setRTESupport($this->submission->getUserId(), "exca~", "exc_ass"); 
-			
-			// see ilObjForumGUI
-			$text->disableButtons(array(
-				'charmap',
-				'undo',
-				'redo',
-				'justifyleft',
-				'justifycenter',
-				'justifyright',
-				'justifyfull',
-				'anchor',
-				'fullscreen',
-				'cut',
-				'copy',
-				'paste',
-				'pastetext',
-				// 'formatselect' #13234
-			));
+		    // CHANGES IN CORE
+            if ($this->assignment->getTitle() == "Руководитель / Advisor") {
+                $select = new ilSelectInputGUI($this->lng->txt("exc_your_text"), "atxt");
+                $select->setRequired((bool)$this->submission->getAssignment()->getMandatory());
+                include_once "./Modules/Group/classes/class.ilObjGroup.php";
+                global $ilObjDataCache, $ilDB;
+                $teachersIds = ilObjGroup::_getMembers($ilObjDataCache->lookupObjId(1348));
+                $query = "SELECT * FROM usr_data as ud WHERE usr_id IN (" . implode(",", ilUtil::quoteArray($teachersIds)) . ");";
+                $res = $ilDB->query($query);
+                $teachers = array("" => '---');
+                while ($teacher = $res->fetchRow()) {
+                    if ($teacher[4] != "ICEF") {
+                        $teachers[$teacher[4] . " " . $teacher[3]] = $teacher[4] . " " . $teacher[3];
+                    }
+                }
+                ksort($teachers);
+                $select->setOptions($teachers);
+                $form->addItem($select);
+            } elseif ($this->assignment->getTitle() == "Тема работы / Theme (Русский язык)" || $this->assignment->getTitle() == "Тема работы / Theme (English language)") {
+                $string = new ilTextInputGUI($this->lng->txt("exc_your_text"), "atxt");
+                $string->setRequired((bool)$this->submission->getAssignment()->getMandatory());
+                $form->addItem($string);
+            } else {
+                $text = new ilTextAreaInputGUI($this->lng->txt("exc_your_text"), "atxt");
+                $text->setRequired((bool)$this->submission->getAssignment()->getMandatory());
+                $text->setRows(40);
+                $form->addItem($text);
+
+                // custom rte tags
+                $text->setUseRte(true);
+                $text->setRTESupport($this->submission->getUserId(), "exca~", "exc_ass");
+
+                // see ilObjForumGUI
+                $text->disableButtons(array(
+                    'charmap',
+                    'undo',
+                    'redo',
+                    'justifyleft',
+                    'justifycenter',
+                    'justifyright',
+                    'justifyfull',
+                    'anchor',
+                    'fullscreen',
+                    'cut',
+                    'copy',
+                    'paste',
+                    'pastetext',
+                    // 'formatselect' #13234
+                ));
+            }
 			
 			$form->setFormAction($ilCtrl->getFormAction($this, "updateAssignmentText"));
 			$form->addCommandButton("updateAssignmentTextAndReturn", $this->lng->txt("save_return"));		
@@ -182,30 +206,33 @@ class ilExSubmissionTextGUI extends ilExSubmissionBaseGUI
 			$ilCtrl->redirect($this, "returnToParent");
 		}
 		
-		$form = $this->initAssignmentTextForm();	
-		
-		// we are not using a purifier, so we have to set the valid RTE tags
-		// :TODO: 
-		include_once("./Services/AdvancedEditing/classes/class.ilObjAdvancedEditing.php");
-		$rte = $form->getItemByPostVar("atxt");
-		$rte->setRteTags(ilObjAdvancedEditing::_getUsedHTMLTags("exc_ass"));
+		$form = $this->initAssignmentTextForm();
+
+		// CHANGES IN CORE
+        if ($this->assignment->getTitle() != "Руководитель / Advisor" && $this->assignment->getTitle() != "Тема работы / Theme (Русский язык)" && $this->assignment->getTitle() != "Тема работы / Theme (English language)") {
+            // we are not using a purifier, so we have to set the valid RTE tags
+            // :TODO:
+            include_once("./Services/AdvancedEditing/classes/class.ilObjAdvancedEditing.php");
+            $rte = $form->getItemByPostVar("atxt");
+            $rte->setRteTags(ilObjAdvancedEditing::_getUsedHTMLTags("exc_ass"));
+        }
 		
 		if($form->checkInput())
-		{			
-			$text = trim($form->getInput("atxt"));	
-									
+		{
+			$text = trim($form->getInput("atxt"));
+
 			$existing = $this->submission->getFiles();
-												
+
 			$returned_id = $this->submission->updateTextSubmission(
 				// mob src to mob id
-				ilRTE::_replaceMediaObjectImageSrc($text, 0));	
-			
+				ilRTE::_replaceMediaObjectImageSrc($text, 0));
+
 			// no empty text
 			if($returned_id)
 			{
 				// #16532 - always send notifications
-				$this->handleNewUpload();					
-				
+				$this->handleNewUpload();
+
 				// mob usage
 				include_once "Services/MediaObjects/classes/class.ilObjMediaObject.php";
 				$mobs = ilRTE::_getMediaObjects($text, 0);
@@ -222,7 +249,7 @@ class ilExSubmissionTextGUI extends ilExSubmissionBaseGUI
 			{
 				$this->handleRemovedUpload();
 			}
-			
+
 			ilUtil::sendSuccess($this->lng->txt("settings_saved"), true);
 			if($a_return)
 			{
