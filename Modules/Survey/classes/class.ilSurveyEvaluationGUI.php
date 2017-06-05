@@ -385,8 +385,8 @@ class ilSurveyEvaluationGUI
 				
 				// CHANGES IN CORE @author Ivan Filatov 20 nov 2014
 				// add new summary list
-				// 15 for spring, 13 for fall
-				$summaryworksheet =& $workbook->addWorksheet("(".mb_substr($this->object->getTitle(), 13, 3).") ".mb_substr($this->object->getTitle(), 29));
+				// 15-31 for spring, 13-29 for fall
+				$summaryworksheet =& $workbook->addWorksheet("(".mb_substr($this->object->getTitle(), 15, 3).") ".mb_substr($this->object->getTitle(), 31));
 				$column = 0;
 				
 				break;

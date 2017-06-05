@@ -426,6 +426,7 @@ class ilPersonalDesktopGUI
 
 
 		 // Survey for students - must be added to personal desktop items
+		/*
 		$current_period = "2017 ";
 		$svy_items = $ilUser->getDesktopItems("svy");
 		$add_crsh2 = false;
@@ -461,9 +462,10 @@ class ilPersonalDesktopGUI
 
 			$this->tpl->setVariable("HEADCOL_CONTENT", $add_crsh2 ? $usr_crsh2 : "");
 		}
+		*/
 
 		// Survey results for teachers & admins
-		/*
+		
 		if(ilParticipants::_isParticipant(1348, $ilUser->getId()) || ilParticipants::_isParticipant(1357, $ilUser->getId()))
 		{
 			switch($lng->lang_key)
@@ -471,9 +473,9 @@ class ilPersonalDesktopGUI
 				case "ru":
 				{
 					$usr_crsh2 .=
-					"<div class=\"ilBlockHeader\"><img src=\"".ilUtil::getImagePath("attention.png")."\" height=\"15\" width=\"15\" style=\"display:inline;\" />&nbsp;<h3 class=\"ilBlockHeader\">Анкетирование: осень 2016</h3></div>\n".
+					"<div class=\"ilBlockHeader\"><img src=\"".ilUtil::getImagePath("attention.png")."\" height=\"15\" width=\"15\" style=\"display:inline;\" />&nbsp;<h3 class=\"ilBlockHeader\">Анкетирование: весна 2017</h3></div>\n".
 					"<div class=\"ilObjListRow\" style=\"padding: 5px;\">".
-					"Просмотр результатов анкетирования доступен <a href=\"http://icef-info.hse.ru/goto_icef_cat_11747.html\">здесь</a>.<br />
+					"Просмотр результатов анкетирования доступен <a href=\"http://icef-info.hse.ru/goto_icef_cat_11748.html\">здесь</a>.<br />
 					Для просмотра своих результатов зайдите в анкетирование по соответствующему предмету и там на вкладку \"Мои результаты\".<br />
 					Если у Вас возникают какие-то ошибки при просмотре результатов, пожалуйста, свяжитесь с Иваном Филатовым (<a href=\"mailto:ifilatov@hse.ru\">ifilatov@hse.ru</a>).".
 					"</div>\n";
@@ -483,9 +485,9 @@ class ilPersonalDesktopGUI
 				default:
 				{
 					$usr_crsh2 .=
-					"<div class=\"ilBlockHeader\"><img src=\"".ilUtil::getImagePath("attention.png")."\" height=\"15\" width=\"15\" style=\"display:inline;\" />&nbsp;<h3 class=\"ilBlockHeader\">Survey: fall 2016</h3></div>\n".
+					"<div class=\"ilBlockHeader\"><img src=\"".ilUtil::getImagePath("attention.png")."\" height=\"15\" width=\"15\" style=\"display:inline;\" />&nbsp;<h3 class=\"ilBlockHeader\">Survey: spring 2017</h3></div>\n".
 					"<div class=\"ilObjListRow\" style=\"padding: 5px;\">".
-					"Please find <a href=\"http://icef-info.hse.ru/goto_icef_cat_11747.html\">survey results here</a>.<br />
+					"Please find <a href=\"http://icef-info.hse.ru/goto_icef_cat_11748.html\">survey results here</a>.<br />
 					In order to view results, please enter the corresponding survey and then navigate to \"My results\" tab.<br />
 					If you experience any problems with viewing your personal results, please contact Ivan Filatov (<a href=\"mailto:ifilatov@hse.ru\">ifilatov@hse.ru</a>).".
 					"</div>\n";
@@ -495,7 +497,7 @@ class ilPersonalDesktopGUI
 
 			$this->tpl->setVariable("HEADCOL_CONTENT", $usr_crsh2);
 		}
-		*/
+		
 
 		// END CHANGES IN CORE
 

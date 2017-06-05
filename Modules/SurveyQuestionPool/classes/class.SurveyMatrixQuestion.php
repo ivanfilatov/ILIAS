@@ -1608,7 +1608,7 @@ class SurveyMatrixQuestion extends SurveyQuestion
                 $teacher_name = $ilDB->fetchAssoc($teacher_name_query)['fullname'];
                 $column = 0;
                 
-                $worksheet->writeString($row+8, $column, mb_substr($worksheet->name, 4));
+                $worksheet->writeString($row+8, $column, mb_substr($worksheet->name, 6));
                 $column++;
                 $worksheet->writeString($row+8, $column, "Lectures");
                 $column++;
