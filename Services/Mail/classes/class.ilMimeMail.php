@@ -337,17 +337,15 @@ class ilMimeMail
 
 		require_once 'Services/Mail/classes/class.ilMail.php';
 		$addr = ilMail::getIliasMailerAddress();
-		
-		// CHANGES IN CORE
-		//if($this->xheaders['From'] == $addr[0])
-		//{
-		//	$mail->setFrom($this->xheaders['From'], $this->xheaders['FromName']);
-		//}
-		//else
-		//{
+		if($this->xheaders['From'] == $addr[0])
+		{
+			$mail->setFrom($this->xheaders['From'], $this->xheaders['FromName']);
+		}
+		else
+		{
 			$mail->addReplyTo($this->xheaders['From'], $this->xheaders['FromName']);
 			$mail->setFrom($addr[0], $addr[1]);
-		//}
+		}
 		foreach($this->sendto as $recipients)
 		{
 			$recipient_pieces = array_filter(array_map('trim', explode(',', $recipients)));
