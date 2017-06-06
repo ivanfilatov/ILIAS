@@ -73,8 +73,13 @@ class ilExSubmissionTextGUI extends ilExSubmissionBaseGUI
 		{
 		    // CHANGES IN CORE
             if ($this->assignment->getTitle() == "Руководитель / Advisor") {
-                $select = new ilSelectInputGUI($this->lng->txt("exc_your_text"), "atxt");
-                $select->setRequired((bool)$this->submission->getAssignment()->getMandatory());
+                $files = $this->submission->getFiles();
+                $defaultText = '';
+                if ($files && $files[0]['atext']) {
+                    $defaultText = $files[0]['atext'];
+                }
+                $select = new ilSelectInputGUI($this->lng->txt("exc_search_users"), "atxt");
+                $select->setRequired(false);
                 include_once "./Modules/Group/classes/class.ilObjGroup.php";
                 global $ilObjDataCache, $ilDB;
                 $teachersIds = ilObjGroup::_getMembers($ilObjDataCache->lookupObjId(1348));
@@ -89,6 +94,12 @@ class ilExSubmissionTextGUI extends ilExSubmissionBaseGUI
                 ksort($teachers);
                 $select->setOptions($teachers);
                 $form->addItem($select);
+                $freeText = new ilTextInputGUI($this->lng->txt("exc_peer_review_text"), "atxtf");
+                $freeText->setRequired(false);
+                if (!in_array($defaultText, $teachers)) {
+                    $freeText->setValue($defaultText);
+                }
+                $form->addItem($freeText);
             } elseif ($this->assignment->getTitle() == "Тема работы / Theme (Русский язык)" || $this->assignment->getTitle() == "Тема работы / Theme (English language)") {
                 $string = new ilTextInputGUI($this->lng->txt("exc_your_text"), "atxt");
                 $string->setRequired((bool)$this->submission->getAssignment()->getMandatory());
@@ -220,6 +231,13 @@ class ilExSubmissionTextGUI extends ilExSubmissionBaseGUI
 		if($form->checkInput())
 		{
 			$text = trim($form->getInput("atxt"));
+
+			// CHANGES IN CORE
+			if ($this->assignment->getTitle() == "Руководитель / Advisor") {
+			    if ($text == "") {
+			        $text = trim($form->getInput("atxtf"));
+                }
+            }
 
 			$existing = $this->submission->getFiles();
 
