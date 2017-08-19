@@ -286,7 +286,7 @@ class ilPersonalDesktopGUI
 	*/
 	function show()
 	{
-		global $tree, $ilUser, $ilObjDataCache, $lng; // CHANGES IN CORE @author Ivan Filatov 07 oct 2015 - try to add updates to overview + add lng
+		global $tree, $ilUser, $ilObjDataCache, $lng, $ilAccess; // CHANGES IN CORE @author Ivan Filatov 07 oct 2015 - try to add updates to overview + add lng
 
 		// preload block settings
 		include_once("Services/Block/classes/class.ilBlockSetting.php");
@@ -327,6 +327,10 @@ class ilPersonalDesktopGUI
 					$parent_ref_id = $tree->getParentId($ref_id);
 					$par_left      = $tree->getLeftValue($parent_ref_id);
 					$par_left      = sprintf("%010d", $par_left);
+
+                    if (!$ilAccess->checkAccess("read", "", (int) $parent_ref_id)) {
+                        continue;
+                    }
 
 					$references[$par_left . $title . $ref_id] = 	array(
 						'ref_id'      => $ref_id,
@@ -381,15 +385,11 @@ class ilPersonalDesktopGUI
 			}
 		}
 
-
-
 		$no_updates_found = true;
 		foreach($references as $crs_ref)
 		{
-			$crs_children = false;
 			$crs_refid = $crs_ref['ref_id'];
 			$crs_children = $tree->getSubTree($tree->getNodeData($crs_refid));
-
 
 			foreach($crs_children as $crs_node)
 			{
@@ -422,7 +422,7 @@ class ilPersonalDesktopGUI
 			}
 		}
 
-		$this->tpl->setVariable("HEADCOL2_CONTENT", $usr_crsh);
+		$this->tpl->setVariable("HEADCOL3_CONTENT", $usr_crsh);
 
 
 		 // Survey for students - must be added to personal desktop items
@@ -460,7 +460,7 @@ class ilPersonalDesktopGUI
 				}
 			}
 
-			$this->tpl->setVariable("HEADCOL_CONTENT", $add_crsh2 ? $usr_crsh2 : "");
+			$this->tpl->setVariable("HEADCOL2_CONTENT", $add_crsh2 ? $usr_crsh2 : "");
 		}
 		*/
 
@@ -495,9 +495,73 @@ class ilPersonalDesktopGUI
 				}
 			}
 
-			$this->tpl->setVariable("HEADCOL_CONTENT", $usr_crsh2);
+			$this->tpl->setVariable("HEADCOL2_CONTENT", $usr_crsh2);
 		}
-		
+
+		// Courseworks for teachers
+
+		if (ilParticipants::_isParticipant(1348, $ilUser->getId()) || ilParticipants::_isParticipant(1357, $ilUser->getId())) {
+			global $ilDB;
+			$objects_and_users = [];
+            $usr_crswkrs_data = [];
+            $query = "
+				SELECT `er`.`obj_id`, `er`.`user_id`
+				FROM `exc_data` `ed` 
+				LEFT JOIN `exc_returned` `er` ON (`er`.`obj_id` = `ed`.`obj_id` AND `er`.`ass_id` = `ed`.`personal_access`) 
+				WHERE `ed`.`personal_access` > 0 AND `er`.`atext` = " . $ilDB->quote($ilUser->getLastname() . " " . $ilUser->getFirstname()) . ";";
+            $result = $ilDB->execute($ilDB->prepare($query));
+            if ($ilDB->numRows($result) > 0) {
+                while ($object = $ilDB->fetchObject($result)) {
+                    $objects_and_users[$object->obj_id][] = $object->user_id;
+                }
+                include_once 'Modules/Exercise/classes/class.ilExAssignment.php';
+                foreach ($objects_and_users as $objectId => $userIds) {
+                    $files_query = "
+					SELECT `er`.`user_id`, `er`.`filename`, `er`.`filetitle`, `er`.`ts`, `er`.`ass_id`, `er`.`late`, `od`.`title`, CONCAT(`ud`.`lastname`, ' ', `ud`.`firstname`) AS `username`, `objr`.`ref_id`
+					FROM `exc_returned` `er` 
+					LEFT JOIN `object_data` `od` ON `od`.`obj_id` = `er`.`obj_id` 
+					LEFT JOIN `object_reference` `objr` ON `objr`.`obj_id` = `er`.`obj_id`
+					LEFT JOIN `usr_data` `ud` ON `ud`.`usr_id` = `er`.`user_id`
+					WHERE `er`.`obj_id` = " . $ilDB->quote($objectId, 'integer') . " AND `er`.`user_id` IN (" . implode(",", $userIds) . ") AND `er`.`mimetype` IS NOT NULL;";
+                    $files_result = $ilDB->execute($ilDB->prepare($files_query));
+                    if ($ilDB->numRows($files_result) > 0) {
+                        while ($crswrkFile = $ilDB->fetchObject($files_result)) {
+                            $assignment = new ilExAssignment($crswrkFile->ass_id);
+                            $usr_crswkrs_data[$objectId][] = array(
+                                'usr_id' => $crswrkFile->user_id,
+                                'username' => $crswrkFile->username,
+                                'work_ref' => $crswrkFile->ref_id,
+                                'work_title' => $crswrkFile->title,
+                                'ass_id' => $assignment->getId(),
+                                'ass_title' => $assignment->getTitle(),
+                                'late' => $crswrkFile->late,
+                                'file' => array(
+                                    'ts' => $crswrkFile->ts,
+                                    'path' => $crswrkFile->filename,
+                                    'name' => $crswrkFile->filetitle,
+                                ),
+                            );
+                        }
+                    }
+                }
+
+                if (count($usr_crswkrs_data) > 0) {
+                    $usr_crswkrs = "<div class=\"ilBlockHeader\"><h3 class=\"ilBlockHeader\">Курсовые работы / Courseworks</h3></div>\n";
+                    foreach ($usr_crswkrs_data as $crswkrId => $data) {
+                        foreach ($data as $row) {
+                            $usr_crswkrs .= "<div class=\"ilObjListRow row\" style=\"padding: 5px; margin-left : inherit !important; margin-right: inherit !important;\">" .
+                                "<div class=\"col-md-2\">" . date("D, d.m.Y, H:i", strtotime($row['file']['ts'])) . "</div>" .
+                                "<div class=\"col-md-3\">" . "<a href=\"/ilias.php?baseClass=ilExerciseHandlerGUI&ref_id={$row['work_ref']}&cmd=infoScreen\">" . $row['work_title'] . "</a>" . "</div>" .
+                                "<div class=\"col-md-3\">" . $row['ass_title'] . "</div>" .
+                                "<div class=\"col-md-2\">" . $row['username'] . "</div>" .
+                                "<div class=\"col-md-2\">" . "<a href=\"/ilias.php?ref_id={$row['work_ref']}&ass_id={$row['ass_id']}&vw=4&member_id={$row['usr_id']}&cmd=downloadReturned&cmdClass=ilexsubmissionfilegui&cmdNode=j5:jp:jb:jc&baseClass=ilExerciseHandlerGUI\">" . $row['file']['name'] . "</a>" . "</div>" .
+                                "</div>";
+                        }
+                    }
+                    $this->tpl->setVariable("HEADCOL3_CONTENT", $usr_crswkrs);
+                }
+            }
+		}
 
 		// END CHANGES IN CORE
 
