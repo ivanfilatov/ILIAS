@@ -192,6 +192,7 @@ class ilObjFileGUI extends ilObject2GUI
 		if (ilFileUploadSettings::isDragAndDropUploadEnabled())
 		{
 			$forms[] = $this->initMultiUploadForm();
+            $forms[] = $this->initSingleUploadForm(); // CHANGES IN CORE
 		}
 		else
 		{

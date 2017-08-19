@@ -133,11 +133,24 @@ class ilObjExerciseGUI extends ilObjectGUI
 				break;
 			
 			case "ilexercisemanagementgui":
-				$this->checkPermission("write");
-				$ilTabs->activateTab("grades");				
-				include_once("./Modules/Exercise/classes/class.ilExerciseManagementGUI.php");
-				$mgmt_gui = new ilExerciseManagementGUI($this->object, $this->ass);
-				$this->ctrl->forwardCommand($mgmt_gui);
+                // CHANGES IN CORE *start*
+                if(!in_array($ilUser->getLastname()." ".$ilUser->getFirstname(), $this->object->getPersonalAccessNames()))
+                {
+                    $this->checkPermission("write"); // CHANGES IN CORE
+                    $ilTabs->activateTab("grades");
+                    include_once("./Modules/Exercise/classes/class.ilExerciseManagementGUI.php");
+                    $mgmt_gui = new ilExerciseManagementGUI($this->object, $this->ass);
+                    $this->ctrl->forwardCommand($mgmt_gui);
+                }
+                else
+                {
+                    $ilTabs->activateTab("grades");
+                    include_once("./Modules/Exercise/classes/class.ilExerciseManagementGUI.php");
+                    $mgmt_gui = new ilExerciseManagementGUI($this->object, $this->ass);
+                    $this->ctrl->forwardCommand($mgmt_gui);
+                }
+                // CHANGES IN CORE *end*
+
 				break;
 			
 			case "ilexccriteriacataloguegui":
@@ -259,7 +272,31 @@ class ilObjExerciseGUI extends ilObjectGUI
 		// submission notifications
 		$cbox = new ilCheckboxInputGUI($this->lng->txt("exc_submission_notification"), "notification");
 		$cbox->setInfo($this->lng->txt("exc_submission_notification_info"));
-		$a_form->addItem($cbox);		
+		$a_form->addItem($cbox);
+
+        // CHANGES IN CORE *start*
+        // personal access to files
+        $section = new ilFormSectionHeaderGUI();
+        $section->setTitle("PERSONAL");
+        $a_form->addItem($section);
+
+        $assdata = ilExAssignment::getAssignmentDataOfExercise($this->object->getId());
+        $persaccess = new ilRadioGroupInputGUI("Personal access base", "personal_access");
+        $opdef = new ilRadioOption("Disabled", 0, "");
+        $persaccess->addOption($opdef);
+        foreach ($assdata as $ass) {
+            if ($ass["type"] == 5) {
+                $opn = new ilRadioOption($ass["title"], $ass["id"], "");
+                $persaccess->addOption($opn);
+            }
+        }
+        if ($this->object->getPersonalAccess() > 0) {
+            $persaccess->setInfo("Currently these persons have access to this element: " . implode(", ", array_unique($this->object->getPersonalAccessNames())));
+        } else {
+            $persaccess->setInfo("Define teachers' access to evaluation based on one of the text assignments");
+        }
+        $a_form->addItem($persaccess);
+        // CHANGES IN CORE *end*
 		
 		
 		// feedback settings
@@ -291,6 +328,7 @@ class ilObjExerciseGUI extends ilObjectGUI
 
 		$a_values["desc"] = $this->object->getLongDescription();
 		$a_values["show_submissions"] = $this->object->getShowSubmissions();
+        $a_values["personal_access"] = $this->object->getPersonalAccess(); // CHANGES IN CORE
 		$a_values["pass_mode"] = $this->object->getPassMode();
 		if ($a_values["pass_mode"] == "nr")
 		{
@@ -324,6 +362,7 @@ class ilObjExerciseGUI extends ilObjectGUI
 	{
 		global $ilUser;
 		$this->object->setShowSubmissions($a_form->getInput("show_submissions"));
+        $this->object->setPersonalAccess($a_form->getInput("personal_access")); // CHANGES IN CORE
 		$this->object->setPassMode($a_form->getInput("pass_mode"));		
 		if ($this->object->getPassMode() == "nr")
 		{
@@ -369,7 +408,7 @@ class ilObjExerciseGUI extends ilObjectGUI
 	*/
 	function getTabs()
 	{
-		global $lng, $ilHelp;
+		global $lng, $ilHelp, $ilUser; // CHANGES IN CORE
   
 		$ilHelp->setScreenIdComponent("exc");
 		
@@ -398,11 +437,26 @@ class ilObjExerciseGUI extends ilObjectGUI
 			$this->tabs_gui->addTab("settings",
 				$lng->txt("settings"),
 				$this->ctrl->getLinkTarget($this, 'edit'));
-			
-			$this->tabs_gui->addTab("grades",
-				$lng->txt("exc_submissions_and_grades"),
-				$this->ctrl->getLinkTargetByClass("ilexercisemanagementgui", "members"));
+
+            // CHANGES IN CORE
+            // removed
 		}
+
+        // CHANGES IN CORE *start*
+        // grades tab now here
+        if(in_array($ilUser->getLastname()." ".$ilUser->getFirstname(), $this->object->getPersonalAccessNames()))
+        {
+            $this->tabs_gui->addTab("grades",
+                $lng->txt("exc_submissions_and_grades"),
+                $this->ctrl->getLinkTargetByClass("ilexercisemanagementgui", "memberspersonal"));
+        }
+        elseif ($this->checkPermissionBool("write"))
+        {
+            $this->tabs_gui->addTab("grades",
+                $lng->txt("exc_submissions_and_grades"),
+                $this->ctrl->getLinkTargetByClass("ilexercisemanagementgui", "members"));
+        }
+        // CHANGES IN CORE *end*
 
 		// learning progress
 		$save_sort_order = $_GET["sort_order"];		// hack, because exercise sort parameters
