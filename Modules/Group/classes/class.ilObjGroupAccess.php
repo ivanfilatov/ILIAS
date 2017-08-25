@@ -293,6 +293,8 @@ class ilObjGroupAccess extends ilObjectAccess
 		
 		$registration_possible = $info['reg_info_enabled'];
 
+        // CHANGES IN CORE *start*
+		/*
 		// Limited registration (added $registration_possible, see bug 0010157)
 		if(!$info['reg_info_unlimited'] && $registration_possible)
 		{
@@ -324,6 +326,8 @@ class ilObjGroupAccess extends ilObjectAccess
 				$info['reg_info_list_prop']['value'] = $lng->txt('grp_list_reg_noreg');
 			}
 		}
+		*/
+		// CHANGES IN CORE *end*
 		
 		if($info['reg_info_mem_limit'] && $info['reg_info_max_members'] && $registration_possible)
 		{

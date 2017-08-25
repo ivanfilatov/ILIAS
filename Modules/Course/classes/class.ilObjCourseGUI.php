@@ -1907,7 +1907,9 @@ class ilObjCourseGUI extends ilContainerGUI
 		global $ilUser;
 		
 		$this->checkPermission('leave');
-		
+
+        // CHANGES IN CORE *start*
+        /*
 		if($this->object->getMembersObject()->isLastAdmin($ilUser->getId()))
 		{
 			ilUtil::sendFailure($this->lng->txt('crs_min_one_admin'));
@@ -1923,7 +1925,13 @@ class ilObjCourseGUI extends ilContainerGUI
 		$cgui->setFormAction($this->ctrl->getFormAction($this));
 		$cgui->setCancel($this->lng->txt("cancel"), "cancel");
 		$cgui->setConfirm($this->lng->txt("crs_unsubscribe"), "performUnsubscribe");		
-		$this->tpl->setContent($cgui->getHTML());							
+		$this->tpl->setContent($cgui->getHTML());
+        */
+        // CHANGES IN CORE *end*
+
+        ilUtil::sendFailure($this->lng->txt('permission_denied'));
+        $this->viewObject();
+        return false;
 	}
 	
 	/**

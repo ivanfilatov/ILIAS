@@ -964,38 +964,48 @@ class ilObjGroupGUI extends ilContainerGUI
 		global $ilUser;
 		
 		$this->checkPermission('leave');
-		
-		$part = ilGroupParticipants::_getInstanceByObjId($this->object->getId());
-		if($part->isLastAdmin($ilUser->getId()))
-		{
-			ilUtil::sendFailure($this->lng->txt('grp_err_administrator_required'));
-			$this->viewObject();
-			return false;
-		}
-		
-		$this->tabs_gui->setTabActive('grp_btn_unsubscribe');
-		
-		include_once "Services/Utilities/classes/class.ilConfirmationGUI.php";
-		$cgui = new ilConfirmationGUI();		
-		$cgui->setHeaderText($this->lng->txt('grp_dismiss_myself'));
-		$cgui->setFormAction($this->ctrl->getFormAction($this));
-		$cgui->setCancel($this->lng->txt("cancel"), "cancel");
-		$cgui->setConfirm($this->lng->txt("grp_btn_unsubscribe"), "unsubscribe");		
-		$this->tpl->setContent($cgui->getHTML());	
-	}
-	
-	/**
-	 * unsubscribe from group
-	 *
-	 * @access public
-	 * @return
-	 */
+
+        // CHANGES IN CORE *start*
+        /*
+        $part = ilGroupParticipants::_getInstanceByObjId($this->object->getId());
+        if($part->isLastAdmin($ilUser->getId()))
+        {
+            ilUtil::sendFailure($this->lng->txt('grp_err_administrator_required'));
+            $this->viewObject();
+            return false;
+        }
+
+        $this->tabs_gui->setTabActive('grp_btn_unsubscribe');
+
+        include_once "Services/Utilities/classes/class.ilConfirmationGUI.php";
+        $cgui = new ilConfirmationGUI();
+        $cgui->setHeaderText($this->lng->txt('grp_dismiss_myself'));
+        $cgui->setFormAction($this->ctrl->getFormAction($this));
+        $cgui->setCancel($this->lng->txt("cancel"), "cancel");
+        $cgui->setConfirm($this->lng->txt("grp_btn_unsubscribe"), "unsubscribe");
+        $this->tpl->setContent($cgui->getHTML());
+        */
+        // CHANGES IN CORE *end*
+
+        ilUtil::sendFailure($this->lng->txt('permission_denied'));
+        $this->viewObject();
+        return false;
+    }
+
+    /**
+     * unsubscribe from group
+     *
+     * @access public
+     * @return
+     */
 	public function unsubscribeObject()
 	{
 		global $ilUser,$tree, $ilCtrl;
 		
 		$this->checkPermission('leave');
-		
+
+        // CHANGES IN CORE *start*
+        /*
 		$this->object->members_obj->delete($ilUser->getId());
 		
 		include_once './Modules/Group/classes/class.ilGroupMembershipMailNotification.php';
@@ -1012,6 +1022,12 @@ class ilObjGroupGUI extends ilContainerGUI
 		$ilCtrl->setParameterByClass("ilrepositorygui", "ref_id",
 			$tree->getParentId($this->object->getRefId()));
 		$ilCtrl->redirectByClass("ilrepositorygui", "");
+        */
+        // CHANGES IN CORE *end*
+
+        ilUtil::sendFailure($this->lng->txt('permission_denied'));
+        $this->viewObject();
+        return false;
 	}
 
 	/**
