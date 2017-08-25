@@ -708,7 +708,15 @@ class ilAttendanceList
 									$value = ilObjUser::_lookupEmail($user_id);
 									break;
 								}
-								
+
+                            // CHANGES IN CORE *start*
+                            case "phone_mobile":
+                                if(!$user_data[$id])
+                                {
+                                    $value = ilObjUser::_lookupFields($user_id)['phone_mobile'];
+                                    break;
+                                }
+                            // CHANGES IN CORE *end*
 							
 							case "login":
 								if(!$user_data[$id])

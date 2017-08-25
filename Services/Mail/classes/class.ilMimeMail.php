@@ -408,6 +408,7 @@ class ilMimeMail
 				$this->body = nl2br($this->body);
 			}
 			$mail->Body    = str_replace( '{PLACEHOLDER}', ilUtil::makeClickable( $this->body ), $bracket );
+            $mail->Body    = str_replace( '{SENDER_NAME}', $this->xheaders['FromName'] . '&lt;' . $this->xheaders['From'] . '&gt;', $mail->Body); // CHANGES IN CORE
 
 			$directory = './Services/Mail/templates/default/img/';
 			if($skin != 'default')
