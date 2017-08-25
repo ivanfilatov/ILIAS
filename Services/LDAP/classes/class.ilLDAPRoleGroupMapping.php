@@ -65,6 +65,7 @@ class ilLDAPRoleGroupMapping
 	{
 	 	if(is_object(self::$instance))
 	 	{
+            self::$instance->initServers(); // CHANGES IN CORE
 	 		return self::$instance;	
 	 	}
 	 	return self::$instance = new ilLDAPRoleGroupMapping();
@@ -256,7 +257,7 @@ class ilLDAPRoleGroupMapping
 				}
 			}
 		}
-		$this->users = ilObjUser::_getExternalAccountsByAuthMode('ldap',true);
+		$this->users = ilObjUser::_getExternalAccountsByAuthMode('ldap_1',true); // CHANGES IN CORE
 		
 		return true;
 	}

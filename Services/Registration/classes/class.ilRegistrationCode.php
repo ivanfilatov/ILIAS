@@ -13,7 +13,7 @@
 class ilRegistrationCode
 {
 	const DB_TABLE = 'reg_registration_codes';
-	const CODE_LENGTH = 10;
+	const CODE_LENGTH = 20; //CHANGES IN CORE
 	
 	public static function create($role, $stamp, $local_roles, $limit, $limit_date, $reg_type, $ext_type)
 	{
@@ -227,7 +227,10 @@ class ilRegistrationCode
 	{
 		global $ilDB;
 
-		return (bool)$ilDB->update(self::DB_TABLE, array("used"=>array("timestamp", time())), array("code"=>array("text", $code)));
+		// CHANGES IN CORE *start
+		// return (bool)$ilDB->update(self::DB_TABLE, array("used"=>array("timestamp", time())), array("code"=>array("text", $code)));
+        return (bool)$ilDB->update(self::DB_TABLE, array("used"=>array("timestamp", 0)), array("code"=>array("text", $code)));
+        // CHANGES IN CORE *end*
 	}
 
 	public static function getCodeRole($code)

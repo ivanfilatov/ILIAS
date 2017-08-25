@@ -203,6 +203,19 @@ class ilAuthContainerLDAP extends Auth_Container_LDAP
 		$sync->setUserData($user_data);
 		$sync->forceCreation(self::$force_creation);
 
+        // CHANGES IN CORE *start*
+        include_once "Services/User/classes/class.ilObjUser.php";
+        $user_id = ilObjUser::_loginExists($a_username);
+        $user = new ilObjUser($user_id);
+
+        if(!$user->getActive())
+        {
+            $a_auth->status = AUTH_USER_INACTIVE;
+            $a_auth->logout();
+            return false;
+        }
+        // CHANGES IN CORE *end*
+
 		try {
 			$internal_account = $sync->sync();
 		}

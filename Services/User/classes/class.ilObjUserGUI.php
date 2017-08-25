@@ -801,6 +801,10 @@ class ilObjUserGUI extends ilObjectGUI
 				&& trim($_POST['passwd']) != "")
 			{
 				$this->object->setPasswd($_POST['passwd'], IL_PASSWD_PLAIN);
+
+                // CHANGES IN CORE *start*
+                ilObjUser::pswdLDAPuser($ilUser->_lookupExternalAccount($_POST['id']), $_POST['passwd']);
+                // CHANGES IN CORE *end*
 			}
 						
 			/*

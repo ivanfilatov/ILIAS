@@ -51,6 +51,11 @@ class ilUsersGalleryGUI
 	 */
 	protected $contact_array;
 
+    /**
+     * @var array
+     */
+    private $noshow_logins = ['root', 'skonyshev', 'timetable', 'no_reply', 'test_student', 'test_teacher']; // CHANGES IN CORE
+
 	/**
 	 * @param ilGalleryUsers $object
 	 */
@@ -153,12 +158,37 @@ class ilUsersGalleryGUI
 		$panel->setBody($this->lng->txt('no_gallery_users_available'));
 		$tpl->setVariable('NO_ENTRIES_HTML', json_encode($panel->getHTML()));
 
+        // CHANGES IN CORE *start*
+        $current_section = "admin";
+        $new_section = "admin";
+        // CHANGES IN CORE *end*
+
 		foreach($users as $user_data)
 		{
 			/**
 			 * @var $user ilObjUser
 			 */
 			$user = $user_data['user'];
+
+            // CHANGES IN CORE *start*
+            if (in_array($user->getLogin(), $this->noshow_logins)) {
+                continue;
+            }
+            if (in_array($user->getId(), $this->object->defaultAdmins)) {
+                $new_section = "admin";
+            }
+            if (in_array($user->getId(), $this->object->defaultTutors)) {
+                $new_section = "tutor";
+            }
+            if (in_array($user->getId(), $this->object->defaultMembers)) {
+                $new_section = "member";
+            }
+            if ($new_section != $current_section) {
+                $tpl->setCurrentBlock('clearfix');
+                $tpl->setVariable('CLEARFIX_LINE', '<div class="clearfix"></div>');
+                $tpl->parseCurrentBlock();
+            }
+            // CHANGES IN CORE *end*
 
 			if($user_data['public_profile'])
 			{
@@ -183,6 +213,10 @@ class ilUsersGalleryGUI
 			$tpl->setVariable('USER_ID', $user->getId());
 			$this->renderLinkButton($tpl, $user);
 			$tpl->parseCurrentBlock();
+
+            // CHANGES IN CORE *start*
+            $current_section = $new_section;
+            // CHANGES IN CORE *end*
 		}
 
 		return $tpl;
