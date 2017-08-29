@@ -278,6 +278,8 @@ class ilPersonalDesktopGUI
 	*/
 	function show()
 	{
+        global $tree, $ilUser, $ilObjDataCache, $lng, $ilAccess, $ilClientIniFile; // CHANGES IN CORE
+
 		// preload block settings
 		include_once("Services/Block/classes/class.ilBlockSetting.php");
 		ilBlockSetting::preloadPDBlockSettings();
@@ -291,7 +293,262 @@ class ilPersonalDesktopGUI
 		
 		$this->tpl->setTitle($this->lng->txt("overview"));
 		$this->tpl->setVariable("IMG_SPACE", ilUtil::getImagePath("spacer.png", false));
-		
+
+        // CHANGES IN CORE *start*
+
+        include_once 'Services/Membership/classes/class.ilParticipants.php';
+        include_once 'Modules/Course/classes/class.ilObjCourseAccess.php';
+
+        $items = ilParticipants::_getMembershipByType($ilUser->getId(), 'crs');
+
+        $references = array();
+        foreach ($items as $key => $obj_id) {
+            if (ilObjCourseAccess::_isOffline($obj_id)) {
+                continue;
+            }
+
+            $item_references = ilObject::_getAllReferences($obj_id);
+            foreach ($item_references as $ref_id) {
+
+                if ($tree->isInTree($ref_id)) {
+                    $title = $ilObjDataCache->lookupTitle($obj_id);
+                    $type = $ilObjDataCache->lookupType($obj_id);
+
+                    $parent_ref_id = $tree->getParentId($ref_id);
+                    $par_left = $tree->getLeftValue($parent_ref_id);
+                    $par_left = sprintf("%010d", $par_left);
+
+                    if (!$ilAccess->checkAccess("read", "", (int)$parent_ref_id)) {
+                        continue;
+                    }
+
+                    $references[$par_left . $title . $ref_id] = array(
+                        'ref_id' => $ref_id,
+                        'obj_id' => $obj_id,
+                        'type' => $type,
+                        'title' => $title,
+                        'description' => $ilObjDataCache->lookupDescription($obj_id),
+                        'parent_ref' => $parent_ref_id
+                    );
+                }
+            }
+        }
+        ksort($references);
+
+        $lastupdates_period = 2;
+
+        if (isset($_GET['ilp']) && is_numeric($_GET['ilp'])) {
+            $lastupdates_period = intval($_GET['ilp']);
+            setcookie("pdi_lup", $lastupdates_period);
+        } elseif (isset($_COOKIE['pdi_lup']) && is_numeric($_COOKIE['pdi_lup'])) {
+            $lastupdates_period = intval($_COOKIE['pdi_lup']);
+        }
+
+        $cur_requri = $_SERVER['REQUEST_URI'];
+        if (stripos($cur_requri, "&ilp=")) {
+            $new_requri = substr($cur_requri, 0, -6);
+        } else {
+            $new_requri = $cur_requri;
+        }
+
+        $usr_crss = array();
+
+        switch ($lng->lang_key) {
+            case "ru": {
+                $link2days = ($lastupdates_period == 2) ? "<ins>2 дня</ins>" : "<a href=\"{$new_requri}&ilp=2\">2 дня</a>";
+                $link3days = ($lastupdates_period == 3) ? "<ins>3 дня</ins>" : "<a href=\"{$new_requri}&ilp=3\">3 дня</a>";
+                $link5days = ($lastupdates_period == 5) ? "<ins>5 дней</ins>" : "<a href=\"{$new_requri}&ilp=5\">5 дней</a>";
+                $link7days = ($lastupdates_period == 7) ? "<ins>7 дней</ins>" : "<a href=\"{$new_requri}&ilp=7\">7 дней</a>";
+                $usr_crsh = "<div class=\"ilBlockHeader\"><h3 class=\"ilBlockHeader\">Последние обновления ({$link2days} / {$link3days} / {$link5days} / {$link7days})</h3></div>\n";
+                break;
+            }
+            case "en":
+            default: {
+                $link2days = ($lastupdates_period == 2) ? "<ins>2 days</ins>" : "<a href=\"{$new_requri}&ilp=2\">2 days</a>";
+                $link3days = ($lastupdates_period == 3) ? "<ins>3 days</ins>" : "<a href=\"{$new_requri}&ilp=3\">3 days</a>";
+                $link5days = ($lastupdates_period == 5) ? "<ins>5 days</ins>" : "<a href=\"{$new_requri}&ilp=5\">5 days</a>";
+                $link7days = ($lastupdates_period == 7) ? "<ins>7 days</ins>" : "<a href=\"{$new_requri}&ilp=7\">7 days</a>";
+                $usr_crsh = "<div class=\"ilBlockHeader\"><h3 class=\"ilBlockHeader\">Last updates ({$link2days} / {$link3days} / {$link5days} / {$link7days})</h3></div>\n";
+                break;
+            }
+        }
+
+        $no_updates_found = true;
+        foreach ($references as $crs_ref) {
+            $crs_refid = $crs_ref['ref_id'];
+            $crs_children = $tree->getSubTree($tree->getNodeData($crs_refid));
+
+            foreach ($crs_children as $crs_node) {
+                $time_diff = time() - strtotime($crs_node['last_update']);
+                if ($time_diff <= $lastupdates_period * 24 * 60 * 60 && !in_array($crs_node['type'], ['orgu', 'crs', 'grp', 'itgr', 'cat', 'fold'])) {
+                    $usr_crsh .= "<div class=\"ilObjListRow\" style=\"padding: 5px;\">" .
+                        date("D, d.m.Y, H:i", strtotime($crs_node['last_update'])) . " ::: " .
+                        "<a href=\"http://icef-info.hse.ru/goto.php?target=crs_{$crs_ref['ref_id']}&client_id=icef\">{$crs_ref['title']}</a>" .
+                        " > " .
+                        "<a href=\"http://icef-info.hse.ru/goto.php?target={$crs_node['type']}_{$crs_node['ref_id']}&client_id=icef\">{$crs_node['title']}</a>" .
+                        "</div>\n";
+                    $no_updates_found = false;
+                }
+            }
+        }
+
+        switch ($lng->lang_key) {
+            case "ru": {
+                if ($no_updates_found) {
+                    $usr_crsh .= "<div class=\"ilObjListRow\" style=\"padding: 5px;\">" . "За указанный период никаких обновлений по материалам не обнаружено." . "</div>\n";
+                }
+                break;
+            }
+            case "en":
+            default: {
+                if ($no_updates_found) {
+                    $usr_crsh .= "<div class=\"ilObjListRow\" style=\"padding: 5px;\">" . "No updates found for the selected period." . "</div>\n";
+                }
+                break;
+            }
+        }
+
+        $this->tpl->setVariable("HEADCOL3_CONTENT", $usr_crsh);
+
+        // Survey for students - must be added to personal desktop items
+        if ($ilClientIniFile->readVariable('pd_settings', 'survey_student_block') === "1") {
+            $current_period = $ilClientIniFile->readVariable('pd_settings', 'survey_period');
+            $svy_items = $ilUser->getDesktopItems("svy");
+            $add_crsh2 = false;
+            if (ilParticipants::_isParticipant(139, $ilUser->getId()) && count($svy_items) > 0) {
+                switch ($lng->lang_key) {
+                    case "ru": {
+                        $surveyHeader = "Анкетирование";
+                        break;
+                    }
+                    case "en":
+                    default: {
+                        $surveyHeader = "Survey";
+                        break;
+                    }
+                }
+
+                $usr_crsh2 = "<div class=\"ilBlockHeader\"><img src=\"" . ilUtil::getImagePath("attention.png") . "\" height=\"15\" width=\"15\" style=\"display:inline;\" />&nbsp;<h3 class=\"ilBlockHeader\">{$surveyHeader}</h3></div>\n";
+
+                include_once 'Modules/Survey/classes/class.ilObjSurveyAccess.php';
+                $surveyAccess = new ilObjSurveyAccess();
+
+                foreach ($svy_items as $svy_item) {
+                    if (!$surveyAccess->_lookupOnline($svy_item['obj_id'])) {
+                        continue;
+                    }
+
+                    if (mb_stripos($svy_item['title'], $current_period)) {
+                        $add_crsh2 = true;
+                        $usr_crsh2 .= "<div class=\"ilObjListRow\" style=\"padding: 5px;\">" .
+                            "<a href=\"http://icef-info.hse.ru/goto.php?target=svy_{$svy_item['ref_id']}&client_id=icef\">{$svy_item['title']}</a>" .
+                            "</div>\n";
+                    }
+                }
+
+                $this->tpl->setVariable("HEADCOL2_CONTENT", $add_crsh2 ? $usr_crsh2 : "");
+            }
+        }
+
+        // Survey results for teachers & admins
+        if ($ilClientIniFile->readVariable('pd_settings', 'survey_teacher_block') === "1") {
+            if (ilParticipants::_isParticipant(1348, $ilUser->getId()) || ilParticipants::_isParticipant(1357, $ilUser->getId())) {
+                switch ($lng->lang_key) {
+                    case "ru": {
+                        $usr_crsh2 .=
+                            "<div class=\"ilBlockHeader\"><img src=\"" . ilUtil::getImagePath("attention.png") . "\" height=\"15\" width=\"15\" style=\"display:inline;\" />&nbsp;<h3 class=\"ilBlockHeader\">Анкетирование: весна 2017</h3></div>\n" .
+                            "<div class=\"ilObjListRow\" style=\"padding: 5px;\">" .
+                            "Просмотр результатов анкетирования доступен <a href=\"http://icef-info.hse.ru/goto_icef_cat_11748.html\">здесь</a>.<br />
+					Для просмотра своих результатов зайдите в анкетирование по соответствующему предмету и там на вкладку \"Мои результаты\".<br />
+					Если у Вас возникают какие-то ошибки при просмотре результатов, пожалуйста, свяжитесь с Иваном Филатовым (<a href=\"mailto:ifilatov@hse.ru\">ifilatov@hse.ru</a>)." .
+                            "</div>\n";
+                        break;
+                    }
+                    case "en":
+                    default: {
+                        $usr_crsh2 .=
+                            "<div class=\"ilBlockHeader\"><img src=\"" . ilUtil::getImagePath("attention.png") . "\" height=\"15\" width=\"15\" style=\"display:inline;\" />&nbsp;<h3 class=\"ilBlockHeader\">Survey: spring 2017</h3></div>\n" .
+                            "<div class=\"ilObjListRow\" style=\"padding: 5px;\">" .
+                            "Please find <a href=\"http://icef-info.hse.ru/goto_icef_cat_11748.html\">survey results here</a>.<br />
+					In order to view results, please enter the corresponding survey and then navigate to \"My results\" tab.<br />
+					If you experience any problems with viewing your personal results, please contact Ivan Filatov (<a href=\"mailto:ifilatov@hse.ru\">ifilatov@hse.ru</a>)." .
+                            "</div>\n";
+                        break;
+                    }
+                }
+
+                $this->tpl->setVariable("HEADCOL2_CONTENT", $usr_crsh2);
+            }
+        }
+
+        // Courseworks for teachers
+        if ($ilClientIniFile->readVariable('pd_settings', 'coursework_block') === "1") {
+            if (ilParticipants::_isParticipant(1348, $ilUser->getId()) || ilParticipants::_isParticipant(1357, $ilUser->getId())) {
+                global $ilDB;
+                $objects_and_users = [];
+                $usr_crswkrs_data = [];
+                $query = "
+				SELECT `er`.`obj_id`, `er`.`user_id`
+				FROM `exc_data` `ed` 
+				LEFT JOIN `exc_returned` `er` ON (`er`.`obj_id` = `ed`.`obj_id` AND `er`.`ass_id` = `ed`.`personal_access`) 
+				WHERE `ed`.`personal_access` > 0 AND `er`.`atext` = " . $ilDB->quote($ilUser->getLastname() . " " . $ilUser->getFirstname()) . ";";
+                $result = $ilDB->execute($ilDB->prepare($query));
+                if ($ilDB->numRows($result) > 0) {
+                    while ($object = $ilDB->fetchObject($result)) {
+                        $objects_and_users[$object->obj_id][] = $object->user_id;
+                    }
+                    include_once 'Modules/Exercise/classes/class.ilExAssignment.php';
+                    foreach ($objects_and_users as $objectId => $userIds) {
+                        $files_query = "
+					SELECT `er`.`user_id`, `er`.`filename`, `er`.`filetitle`, `er`.`ts`, `er`.`ass_id`, `er`.`late`, `od`.`title`, CONCAT(`ud`.`lastname`, ' ', `ud`.`firstname`) AS `username`, `objr`.`ref_id`
+					FROM `exc_returned` `er` 
+					LEFT JOIN `object_data` `od` ON `od`.`obj_id` = `er`.`obj_id` 
+					LEFT JOIN `object_reference` `objr` ON `objr`.`obj_id` = `er`.`obj_id`
+					LEFT JOIN `usr_data` `ud` ON `ud`.`usr_id` = `er`.`user_id`
+					WHERE `er`.`obj_id` = " . $ilDB->quote($objectId, 'integer') . " AND `er`.`user_id` IN (" . implode(",", $userIds) . ") AND `er`.`mimetype` IS NOT NULL;";
+                        $files_result = $ilDB->execute($ilDB->prepare($files_query));
+                        if ($ilDB->numRows($files_result) > 0) {
+                            while ($crswrkFile = $ilDB->fetchObject($files_result)) {
+                                $assignment = new ilExAssignment($crswrkFile->ass_id);
+                                $usr_crswkrs_data[$objectId][] = array(
+                                    'usr_id' => $crswrkFile->user_id,
+                                    'username' => $crswrkFile->username,
+                                    'work_ref' => $crswrkFile->ref_id,
+                                    'work_title' => $crswrkFile->title,
+                                    'ass_id' => $assignment->getId(),
+                                    'ass_title' => $assignment->getTitle(),
+                                    'late' => $crswrkFile->late,
+                                    'file' => array(
+                                        'ts' => $crswrkFile->ts,
+                                        'path' => $crswrkFile->filename,
+                                        'name' => $crswrkFile->filetitle,
+                                    ),
+                                );
+                            }
+                        }
+                    }
+
+                    if (count($usr_crswkrs_data) > 0) {
+                        $usr_crswkrs = "<div class=\"ilBlockHeader\"><h3 class=\"ilBlockHeader\">Курсовые работы / Courseworks</h3></div>\n";
+                        foreach ($usr_crswkrs_data as $crswkrId => $data) {
+                            foreach ($data as $row) {
+                                $usr_crswkrs .= "<div class=\"ilObjListRow row\" style=\"padding: 5px; margin-left : inherit !important; margin-right: inherit !important;\">" .
+                                    "<div class=\"col-md-2\">" . date("D, d.m.Y, H:i", strtotime($row['file']['ts'])) . "</div>" .
+                                    "<div class=\"col-md-3\">" . "<a href=\"/ilias.php?baseClass=ilExerciseHandlerGUI&ref_id={$row['work_ref']}&cmd=infoScreen\">" . $row['work_title'] . "</a>" . "</div>" .
+                                    "<div class=\"col-md-3\">" . $row['ass_title'] . "</div>" .
+                                    "<div class=\"col-md-2\">" . $row['username'] . "</div>" .
+                                    "<div class=\"col-md-2\">" . "<a href=\"/ilias.php?ref_id={$row['work_ref']}&ass_id={$row['ass_id']}&vw=4&member_id={$row['usr_id']}&cmd=downloadReturned&cmdClass=ilexsubmissionfilegui&cmdNode=j5:jp:jb:jc&baseClass=ilExerciseHandlerGUI\">" . $row['file']['name'] . "</a>" . "</div>" .
+                                    "</div>";
+                            }
+                        }
+                        $this->tpl->setVariable("HEADCOL_CONTENT", $usr_crswkrs);
+                    }
+                }
+            }
+        }
+
+        // CHANGES IN CORE *end*
+
 		$this->tpl->setContent($this->getCenterColumnHTML());
 		$this->tpl->setRightContent($this->getRightColumnHTML());
 		$this->tpl->setLeftContent($this->getLeftColumnHTML());

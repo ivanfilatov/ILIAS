@@ -181,6 +181,8 @@ class ilFormatMail extends ilMail
 	*/
 	function formatLinebreakMessage($a_message)
 	{
+		return $a_message; // CHANGES IN CORE
+
 		$formatted = array();
 
 #		debug($a_message);

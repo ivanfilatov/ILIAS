@@ -810,7 +810,7 @@ class ilAuthUtils
 		// cast to int
 		switch((int) $a_auth_mode)
 		{
-			case AUTH_LDAP:
+            #case AUTH_LDAP: // CHANGES IN CORE
 			case AUTH_RADIUS:
 			case AUTH_ECS:
 				return false;
@@ -858,13 +858,13 @@ class ilAuthUtils
 		switch((int) $a_authmode)
 		{
 			// No local passwords for these auth modes
-			case AUTH_LDAP:
 			case AUTH_RADIUS:
 			case AUTH_ECS:
 			case AUTH_SCRIPT:
 				return false;
 			
 			// Always for and local
+            case AUTH_LDAP: // CHANGES IN CORE
 			case AUTH_LOCAL:
 			case AUTH_APACHE:
 				return true;

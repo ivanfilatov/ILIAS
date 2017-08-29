@@ -1112,7 +1112,7 @@ abstract class ilBlockGUI
 				$end = $this->max_count;
 			}
 				
-			$numinfo = "(".$start."-".$end." ".strtolower($lng->txt("of"))." ".$this->max_count.")";
+			$numinfo = "(".$start."-".$end." ".mb_strtolower($lng->txt("of"))." ".$this->max_count.")"; // CHANGES IN CORE
 		}
 
 		$this->setPreviousNextLinks();

@@ -481,6 +481,19 @@ class ilUserProfile
 						foreach($custom_fields as $custom_field)
 						{
 							$a_form->addItem($custom_field);
+                            // CHANGES IN CORE *start*
+                            if($custom_field->getPostVar() == "udf_1"); // english name
+                            {
+                                if($lng->lang_key == "ru")
+                                {
+                                    $custom_field->setInfo("Английское написание фамилии и имени, как в загран. паспорте, напр. 'Ivanov Ivan'");
+                                }
+								elseif($lng->lang_key == "en")
+                                {
+                                    $custom_field->setInfo("English last name and first name, exactly as in foreign passport, e.g. 'Ivanov Ivan'");
+                                }
+                            }
+                            // CHANGES IN CORE *end*
 						}
 						$custom_fields_done = true;
 					}
@@ -515,6 +528,17 @@ class ilUserProfile
 						$val->setMaxLength($p['maxlength']);
 						$val->setSize(40);
 						$val->setRequired(true);
+
+                        // CHANGES IN CORE *start*
+                        if($lng->lang_key == "ru")
+                        {
+                            $val->setInfo("Напр.: 'iivanov' (первый символ - первая буква имени, далее фамилия)");
+                        }
+						elseif($lng->lang_key == "en")
+                        {
+                            $val->setInfo("E.g.: 'iivanov' (first symbol - first letter of your first name, then last name)");
+                        }
+                        // CHANGES IN CORE *end*
 					}
 					else
 					{
@@ -543,6 +567,37 @@ class ilUserProfile
 						{
 							$ti->setDisabled($ilSetting->get("usr_settings_disable_".$f));
 						}
+
+                        // CHANGES IN CORE *start*
+                        if($f == "phone_mobile")
+                        {
+                            $ti->setInfo("E.g.: 8-XXX-XXX-XXXX");
+                            $ti->setValidationRegexp("/^8-\d{3}-\d{3}-\d{4}$/");
+                        }
+                        if($f == "firstname" && self::$mode == self::MODE_REGISTRATION)
+                        {
+                            if($lng->lang_key == "ru")
+                            {
+                                $ti->setInfo("'Имя[пробел]Отчество' на русском языке, напр. 'Иван Иванович'");
+                            }
+							elseif($lng->lang_key == "en")
+                            {
+                                $ti->setInfo("'Firstname[space]Patronymic' in russian, e.g. 'Иван Иванович'");
+                            }
+                        }
+                        if($f == "lastname" && self::$mode == self::MODE_REGISTRATION)
+                        {
+                            if($lng->lang_key == "ru")
+                            {
+                                $ti->setInfo("'Фамилия' на русском языке, напр. 'Иванов'");
+                            }
+							elseif($lng->lang_key == "en")
+                            {
+                                $ti->setInfo("'Lastname' in russian, e.g. 'Иванов'");
+                            }
+                        }
+                        // CHANGES IN CORE *end*
+
 						$a_form->addItem($ti);
 					}
 					break;
@@ -817,6 +872,21 @@ class ilUserProfile
 			}
 			foreach($custom_fields as $custom_field)
 			{
+                // CHANGES IN CORE *start*
+                if($custom_field->getPostVar() == "udf_1"); // english name
+                {
+
+                    if($lng->lang_key == "ru")
+                    {
+                        $custom_field->setInfo("Английское написание фамилии и имени, как в загран. паспорте, напр. 'Ivanov Ivan'");
+                    }
+					elseif($lng->lang_key == "en")
+                    {
+                        $custom_field->setInfo("English last name and first name, exactly as in foreign passport, e.g. 'Ivanov Ivan'");
+                    }
+                }
+                // CHANGES IN CORE *end*
+
 				$a_form->addItem($custom_field);
 			}
 		}
@@ -871,6 +941,12 @@ class ilUserProfile
 	static function isProfileIncomplete($a_user, $a_include_udf = true, $a_personal_data_only = true)
 	{
 		global $ilSetting;
+
+        // CHANGES IN CORE *start*
+        if (stripos($a_user->getPersonalPicturePath(), "no_photo")) {
+            return true;
+        }
+        // CHANGES IN CORE *end*
 		
 		// standard fields
 		foreach(self::$user_field as $field => $definition)

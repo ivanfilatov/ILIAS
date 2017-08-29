@@ -30,6 +30,8 @@ class ilObjExercise extends ilObject
 	var $year;
 	var $instruction;
 	var $certificate_visibility;
+    var $personal_access; // CHANGES IN CORE
+    var $personal_access_names = []; // CHANGES IN CORE
 	
 	var $tutor_feedback = 7; // [int]
 	
@@ -87,6 +89,21 @@ class ilObjExercise extends ilObject
 	{
 		return $this->instruction;
 	}
+
+    // CHANGES IN CORE *start*
+    function setPersonalAccess($a_personal_access)
+    {
+        $this->personal_access = $a_personal_access;
+    }
+    function getPersonalAccess()
+    {
+        return $this->personal_access;
+    }
+    function getPersonalAccessNames()
+    {
+        return $this->personal_access_names;
+    }
+    // CHANGES IN CORE *end*
 	
 	/**
 	 * Set pass mode (all | nr)
@@ -202,6 +219,7 @@ class ilObjExercise extends ilObject
 			"show_submissions" => array("integer", (int) $this->getShowSubmissions()),
 			'compl_by_submission' => array('integer', (int)$this->isCompletionBySubmissionEnabled()),
 			"certificate_visibility" => array("integer", (int)$this->getCertificateVisibility()),
+            "personal_access" => array("integer", (int)$this->getPersonalAccess()), // CHANGES IN CORE
 			"tfeedback" => array("integer", (int)$this->getTutorFeedback())
 			));
 		return true;
@@ -292,6 +310,19 @@ class ilObjExercise extends ilObject
 		return true;
 	}
 
+	// CHANGES IN CORE *start*
+    function definePersonalAccessNames()
+    {
+        global $ilDB;
+        $query = "SELECT user_id, atext FROM exc_returned WHERE ass_id = ".$ilDB->quote($this->getPersonalAccess(), "integer");
+        $res = $ilDB->query($query);
+        while($row = $ilDB->fetchObject($res))
+        {
+            $this->personal_access_names[$row->user_id] = $row->atext;
+        }
+    }
+    // CHANGES IN CORE *end*
+
 	function read()
 	{
 		global $ilDB;
@@ -317,6 +348,12 @@ class ilObjExercise extends ilObject
 			}
 			$this->setCompletionBySubmission($row->compl_by_submission == 1 ? true : false);
 			$this->setCertificateVisibility($row->certificate_visibility);
+            // CHANGES IN CORE *start*
+            $this->setPersonalAccess($row->personal_access);
+            if ($row->personal_access > 0) {
+                $this->definePersonalAccessNames();
+            }
+            // CHANGES IN CORE *end*
 			$this->setTutorFeedback($row->tfeedback);
 		}
 		
@@ -347,6 +384,7 @@ class ilObjExercise extends ilObject
 			"pass_nr" => array("integer", $this->getPassNr()),
 			"show_submissions" => array("integer", (int) $this->getShowSubmissions()),
 			'compl_by_submission' => array('integer', (int)$this->isCompletionBySubmissionEnabled()),
+            "personal_access" => array("integer", (int) $this->getPersonalAccess()), // CHANGES IN CORE
 			'tfeedback' => array('integer', (int)$this->getTutorFeedback()),
 			), array(
 			"obj_id" => array("integer", $this->getId())

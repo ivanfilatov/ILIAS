@@ -355,7 +355,9 @@ class ilPublicUserProfileGUI
 		$tpl->setVariable("TXT_NAME", $lng->txt("name"));
 		$tpl->setVariable("FIRSTNAME", $first_name);
 		$tpl->setVariable("LASTNAME", $user->getLastName());
-		
+
+        // CHANGES IN CORE *start*
+        /*
 		if($user->getBirthday() &&
 			$this->getPublicPref($user, "public_birthday") == "y")
 		{
@@ -365,7 +367,7 @@ class ilPublicUserProfileGUI
 			$tpl->setVariable("VAL_BIRTHDAY", ilDatePresentation::formatDate(new ilDate($user->getBirthday(), IL_CAL_DATE)));
 			$tpl->parseCurrentBlock();
 		}
-		
+
 		if(!$this->offline)
 		{
 			// vcard
@@ -375,6 +377,43 @@ class ilPublicUserProfileGUI
 			$ilCtrl->setParameter($this, "user", $this->getUserId());
 			$tpl->setVariable("HREF_VCARD", $ilCtrl->getLinkTarget($this, "deliverVCard"));
 		}
+        */
+
+        global $ilAccess, $rbacreview;
+        if ($ilAccess->checkAccess("write", "", 7)) {
+            $tpl->setCurrentBlock("link");
+            if ($lng->lang_key == "ru") {
+                $tpl->setVariable("TXT_LINK", "Редактировать профиль");
+            } else {
+                $tpl->setVariable("TXT_LINK", "Edit Profile");
+            }
+            $tpl->setVariable("HREF_LINK", "ilias.php?ref_id=7&admin_mode=settings&obj_id=" . $user->getId() . "&cmd=view&cmdClass=ilobjusergui&cmdNode=5g:c8&baseClass=ilAdministrationGUI");
+        }
+
+        include_once './Services/AccessControl/classes/class.ilObjRole.php';
+
+        foreach ($rbacreview->assignedRoles($user->getId()) as $role) {
+            $userroles[] = ilObjRole::_lookupTitle($role);
+        }
+
+        sort($userroles);
+        $userroles_txt = "";
+        foreach ($userroles as $rolename) {
+            if (substr($rolename, 0, 3) == 'il_') {
+                $rolename = "(local) " . ilObjRole::_getTranslation($rolename) . ": " . ilObject::_lookupTitle(ilObject::_lookupObjId(preg_replace("([^0-9])", "", $rolename)));
+            } else {
+                $rolename = "(global) " . $rolename;
+            }
+            $userroles_txt .= $rolename . '<br />';
+        }
+        $tpl->setCurrentBlock("role_data");
+        if ($lng->lang_key == "ru") {
+            $tpl->setVariable("TXT_ROLE_DATA", "Приписанные роли");
+        } elseif($lng->lang_key == "en") {
+            $tpl->setVariable("TXT_ROLE_DATA", "Roles Assigned");
+        }
+        $tpl->setVariable("ROLE_DATA", '<span style="font-size:10px;">' . $userroles_txt . '</span>');
+        // CHANGES IN CORE *end*
 		
 		$webspace_dir = ilUtil::getWebspaceDir("user");
 		$check_dir = ilUtil::getWebspaceDir();

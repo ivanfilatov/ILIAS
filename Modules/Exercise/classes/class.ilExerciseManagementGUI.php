@@ -23,6 +23,7 @@ class ilExerciseManagementGUI
 	const VIEW_ASSIGNMENT = 1;
 	const VIEW_PARTICIPANT = 2;	
 	const VIEW_GRADES = 3;
+    const VIEW_PERSONAL = 4; // CHANGES IN CORE
 	
 	/**
 	 * Constructor
@@ -43,7 +44,7 @@ class ilExerciseManagementGUI
 		$this->ctrl = $ilCtrl;
 		$this->tabs_gui = $ilTabs;
 		$this->lng = $lng;
-		$this->tpl = $tpl;				
+		$this->tpl = $tpl;
 	}
 	
 	public function executeCommand()
@@ -51,7 +52,7 @@ class ilExerciseManagementGUI
 		global $ilCtrl, $lng, $ilTabs;
 		
 		$class = $ilCtrl->getNextClass($this);
-		$cmd = $ilCtrl->getCmd("listPublicSubmissions");		
+		$cmd = $ilCtrl->getCmd("listPublicSubmissions");
 		
 		switch($class)
 		{			
@@ -156,6 +157,12 @@ class ilExerciseManagementGUI
 			case self::VIEW_GRADES:
 				$back_cmd = "showGradesOverview";
 				break;
+
+            // CHANGES IN CORE *start*
+            case self::VIEW_PERSONAL:
+                $back_cmd = "memberspersonal";
+                break;
+            // CHANGES IN CORE *end*
 			
 			default:
 			// case self::VIEW_ASSIGNMENT:
@@ -185,7 +192,7 @@ class ilExerciseManagementGUI
 	*/
 	function addSubTabs($a_activate)
 	{
-		global $ilTabs, $lng, $ilCtrl;
+		global $ilTabs, $lng, $ilCtrl, $ilUser; // CHANGES IN CORE
 		
 		$ass_id = $_GET["ass_id"];
 		$part_id = $_GET["part_id"];
@@ -194,14 +201,21 @@ class ilExerciseManagementGUI
 		$ilCtrl->setParameter($this, "member_id", "");
 		$ilCtrl->setParameter($this, "ass_id", "");
 		$ilCtrl->setParameter($this, "part_id", "");
-		
-		$ilTabs->addSubTab("assignment", $lng->txt("exc_assignment_view"),				
-			$ilCtrl->getLinkTarget($this, "members"));	
-		$ilTabs->addSubTab("participant", $lng->txt("exc_participant_view"),
-			$ilCtrl->getLinkTarget($this, "showParticipant"));		
-		$ilTabs->addSubTab("grades", $lng->txt("exc_grades_overview"),
-			$ilCtrl->getLinkTarget($this, "showGradesOverview"));
-		$ilTabs->activateSubTab($a_activate);
+
+        // CHANGES IN CORE *start*
+        if(in_array($ilUser->getLastname()." ".$ilUser->getFirstname(), $this->exercise->getPersonalAccessNames())) {
+            $ilTabs->addSubTab("personal", $lng->txt("exc_assignment_view"),
+                $ilCtrl->getLinkTarget($this, "memberspersonal"));
+        } else {
+            $ilTabs->addSubTab("assignment", $lng->txt("exc_assignment_view"),
+                $ilCtrl->getLinkTarget($this, "members"));
+            $ilTabs->addSubTab("participant", $lng->txt("exc_participant_view"),
+                $ilCtrl->getLinkTarget($this, "showParticipant"));
+            $ilTabs->addSubTab("grades", $lng->txt("exc_grades_overview"),
+                $ilCtrl->getLinkTarget($this, "showGradesOverview"));
+            $ilTabs->activateSubTab($a_activate);
+        }
+        // CHANGES IN CORE *end*
 		
 		$ilCtrl->setParameter($this, "ass_id", $ass_id);
 		$ilCtrl->setParameter($this, "part_id", $part_id);		
@@ -331,7 +345,7 @@ class ilExerciseManagementGUI
 	function membersApplyObject()
 	{
 		include_once("./Modules/Exercise/classes/class.ilExerciseMemberTableGUI.php");
-		$exc_tab = new ilExerciseMemberTableGUI($this, "members", $this->exercise, $this->assignment->getId());		
+		$exc_tab = new ilExerciseMemberTableGUI($this, "members", $this->exercise, $this->assignment->getId());
 		$exc_tab->resetOffset();
 		$exc_tab->writeFilterToSession();
 		
@@ -341,7 +355,7 @@ class ilExerciseManagementGUI
 	function membersResetObject()
 	{
 		include_once("./Modules/Exercise/classes/class.ilExerciseMemberTableGUI.php");
-		$exc_tab = new ilExerciseMemberTableGUI($this, "members", $this->exercise, $this->assignment->getId());		
+		$exc_tab = new ilExerciseMemberTableGUI($this, "members", $this->exercise, $this->assignment->getId());
 		$exc_tab->resetOffset();
 		$exc_tab->resetFilter();
 		
@@ -370,7 +384,149 @@ class ilExerciseManagementGUI
 		ilUtil::sendSuccess($lng->txt("exc_msg_saved_grades"), true);
 		$ilCtrl->redirect($this, "showGradesOverview");
 	}
-	
+
+    // CHANGES IN CORE *start*
+    /**
+     * View for personal access
+     */
+    function memberspersonalObject()
+    {
+        global $tpl, $ilToolbar, $ilCtrl, $lng;
+
+        include_once 'Services/Tracking/classes/class.ilLPMarks.php';
+
+        $this->addSubTabs("personal");
+
+        // assignment selection
+        include_once("./Modules/Exercise/classes/class.ilExAssignment.php");
+        $ass = ilExAssignment::getInstancesByExercise($this->exercise->getId());
+
+        if (!$this->assignment)
+        {
+            $this->assignment = current($ass);
+        }
+
+        reset($ass);
+        if (count($ass) > 1)
+        {
+            $options = array();
+            foreach ($ass as $a)
+            {
+                $options[$a->getId()] = $a->getTitle();
+            }
+            include_once("./Services/Form/classes/class.ilSelectInputGUI.php");
+            $si = new ilSelectInputGUI($this->lng->txt(""), "ass_id");
+            $si->setOptions($options);
+            $si->setValue($this->assignment->getId());
+            $ilToolbar->addStickyItem($si);
+
+            include_once("./Services/UIComponent/Button/classes/class.ilSubmitButton.php");
+            $button = ilSubmitButton::getInstance();
+            $button->setCaption("exc_select_ass");
+            $button->setCommand("selectAssignment");
+            $ilToolbar->addStickyItem($button);
+
+            $ilToolbar->addSeparator();
+        }
+        // #16165 - if only 1 assignment dropdown is not displayed;
+        else if($this->assignment)
+        {
+            $ilCtrl->setParameter($this, "ass_id", $this->assignment->getId());
+        }
+
+        // add member
+        include_once './Services/Search/classes/class.ilRepositorySearchGUI.php';
+        ilRepositorySearchGUI::fillAutoCompleteToolbar(
+            $this,
+            $ilToolbar,
+            array(
+                'auto_complete_name'	=> $lng->txt('user'),
+                'submit_name'			=> $lng->txt('add'),
+                'add_search'			=> true,
+                'add_from_container'    => $this->exercise->getRefId()
+            )
+        );
+
+        // #16168 - no assignments
+        if (count($ass) > 0)
+        {
+            $ilToolbar->addSeparator();
+
+            // we do not want the ilRepositorySearchGUI form action
+            $ilToolbar->setFormAction($ilCtrl->getFormAction($this));
+
+            $ilCtrl->setParameter($this, "ass_id", $this->assignment->getId());
+
+            if($this->assignment->getType() == ilExAssignment::TYPE_UPLOAD_TEAM)
+            {
+                include_once("./Modules/Exercise/classes/class.ilExAssignmentTeam.php");
+                if(ilExAssignmentTeam::getAdoptableGroups($this->exercise->getRefId()))
+                {
+                    $ilToolbar->addButton($this->lng->txt("exc_adopt_group_teams"),
+                        $this->ctrl->getLinkTarget($this, "adoptTeamsFromGroup"));
+
+                    $ilToolbar->addSeparator();
+                }
+            }
+            else if($this->exercise->hasTutorFeedbackFile())
+            {
+                // multi-feedback
+                $ilToolbar->addButton($this->lng->txt("exc_multi_feedback"),
+                    $this->ctrl->getLinkTarget($this, "showMultiFeedback"));
+
+                $ilToolbar->addSeparator();
+            }
+
+            if(ilExSubmission::hasAnySubmissions($this->assignment->getId()))
+            {
+                if($this->assignment->getType() == ilExAssignment::TYPE_TEXT)
+                {
+                    $ilToolbar->addFormButton($lng->txt("exc_list_text_assignment"), "listTextAssignment");
+                }
+                else
+                {
+                    $ilToolbar->addFormButton($lng->txt("download_all_returned_files"), "downloadAll");
+                }
+            }
+            $this->ctrl->setParameter($this, "vw", self::VIEW_PERSONAL);
+
+            include_once("./Modules/Exercise/classes/class.ilExercisePersonalMemberTableGUI.php");
+            $exc_tab = new ilExercisePersonalMemberTableGUI($this, "memberspersonal", $this->exercise, $this->assignment->getId());
+            $tpl->setContent(
+                $exc_tab->getHTML().
+                $this->initIndividualDeadlineModal()
+            );
+        }
+        else
+        {
+            ilUtil::sendInfo($lng->txt("exc_no_assignments_available"));
+        }
+
+        $ilCtrl->setParameter($this, "ass_id", "");
+
+        return;
+    }
+
+    function memberspersonalApplyObject()
+    {
+        include_once("./Modules/Exercise/classes/class.ilExercisePersonalMemberTableGUI.php");
+        $exc_tab = new ilExercisePersonalMemberTableGUI($this, "memberspersonal", $this->exercise, $this->assignment->getId());
+        $exc_tab->resetOffset();
+        $exc_tab->writeFilterToSession();
+
+        $this->memberspersonalObject();
+    }
+
+    function memberspersonalResetObject()
+    {
+        include_once("./Modules/Exercise/classes/class.ilExercisePersonalMemberTableGUI.php");
+        $exc_tab = new ilExercisePersonalMemberTableGUI($this, "memberspersonal", $this->exercise, $this->assignment->getId());
+        $exc_tab->resetOffset();
+        $exc_tab->resetFilter();
+
+        $this->memberspersonalObject();
+    }
+    // CHANGES IN CORE *end*
 	
 	// TEXT ASSIGNMENT ?!
 	
@@ -487,9 +643,18 @@ class ilExerciseManagementGUI
 	 * Select assignment
 	 */
 	function selectAssignmentObject()
-	{		
+	{
+        global $ilUser; // CHANGES IN CORE
+
 		$_GET["ass_id"] = ilUtil::stripSlashes($_POST["ass_id"]);
-		$this->membersObject();
+
+        // CHANGES IN CORE *start*
+        if(in_array($ilUser->getLastname()." ".$ilUser->getFirstname(), $this->exercise->getPersonalAccessNames())) {
+            $this->memberspersonalObject();
+        } else {
+            $this->membersObject();
+        }
+        // CHANGES IN CORE *end*
 	}
 	
 	/**
@@ -1542,7 +1707,7 @@ class ilExerciseManagementGUI
 		{
 			ilUtil::sendSuccess($this->lng->txt("settings_saved"), true);
 			$this->ctrl->redirect($this, $this->assignment
-				? "members"
+				? $this->getViewBack() // CHANGES IN CORE
 				: "showParticipant");	
 		}
 		

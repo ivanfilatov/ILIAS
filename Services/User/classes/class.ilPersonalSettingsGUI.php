@@ -274,11 +274,15 @@ class ilPersonalSettingsGUI
 				"", "", "", $showPassword);
 		}
 
+        // CHANGES IN CORE *start*
+		/*
 		include_once 'Services/Mail/classes/class.ilMailGlobalServices.php';
 		if($rbacsystem->checkAccess('internal_mail', ilMailGlobalServices::getMailObjectRefId()))
 		{
 			$ilTabs->addTarget("mail_settings", $this->ctrl->getLinkTarget($this, "showMailOptions"), "", "", "", $showMailOptions);
 		}
+		*/
+        // CHANGES IN CORE *end*
 
 		require_once 'Modules/Chatroom/classes/class.ilPersonalChatSettingsFormGUI.php';
 		$chatSettingsGui = new ilPersonalChatSettingsFormGUI(false);

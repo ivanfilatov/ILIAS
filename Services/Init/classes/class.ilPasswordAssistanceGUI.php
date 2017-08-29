@@ -221,8 +221,9 @@ class ilPasswordAssistanceGUI
 				$txt_key = 'pwassist_no_email_found';
 			}
 			else if(
-				$userObj->getAuthMode(true) != AUTH_LOCAL ||
-				($userObj->getAuthMode(true) == AUTH_DEFAULT && AUTH_DEFAULT != AUTH_LOCAL)
+                ($userObj->getAuthMode(true) != AUTH_LDAP) && // CHANGES IN CORE
+                ($userObj->getAuthMode(true) != AUTH_LOCAL ||
+				($userObj->getAuthMode(true) == AUTH_DEFAULT && AUTH_DEFAULT != AUTH_LOCAL))
 			)
 			{
 				$userObj = null;

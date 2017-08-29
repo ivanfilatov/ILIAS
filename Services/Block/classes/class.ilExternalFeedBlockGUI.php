@@ -31,7 +31,7 @@ class ilExternalFeedBlockGUI extends ilExternalFeedBlockGUIGen
 		parent::__construct();
 		
 		$lng->loadLanguageModule("feed");
-		$this->setLimit(5);
+		$this->setLimit(10); // CHANGES IN CORE
 		$this->setRowTemplate("tpl.block_external_feed_row.html", "Services/Feeds");
 	}
 		

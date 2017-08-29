@@ -566,7 +566,9 @@ class ilPersonalProfileGUI
 		$ilTabs->addTab("personal_data", 
 			$this->lng->txt("personal_data"),
 			$this->ctrl->getLinkTarget($this, "showPersonalData"));
-		
+
+		// CHANGES IN CORE *start*
+        /*
 		// public profile
 		$ilTabs->addTab("public_profile",
 			$this->lng->txt("public_profile"),
@@ -576,6 +578,8 @@ class ilPersonalProfileGUI
 		$ilTabs->addTab("export",
 			$this->lng->txt("export")."/".$this->lng->txt("import"),
 			$this->ctrl->getLinkTarget($this, "showExportImport"));
+        */
+        // CHANGES IN CORE *end*
 
 		// #17570
 		if(($ilUser->getPref("public_profile") && 
