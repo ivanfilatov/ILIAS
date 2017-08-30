@@ -1895,6 +1895,41 @@ class ilObjectListGUI
 
 				$cnt++;
 			}
+
+            // CHANGES IN CORE *start*
+            if ($this->type == "file") {
+                $count_users = 0;
+                $count_user_reads = 0;
+                $count_anonymous_reads = 0;
+                $this->tpl->touchBlock("separator_prop");
+                $this->tpl->touchBlock("newline_prop");
+                $this->tpl->touchBlock("std_prop");
+
+                require_once 'Services/Tracking/classes/class.ilChangeEvent.php';
+                if (ilChangeEvent::_isActive()) {
+                    if ($ilUser->getId() != ANONYMOUS_USER_ID) {
+                        $readEvents = ilChangeEvent::_lookupReadEvents($this->obj_id);
+                        foreach ($readEvents as $evt) {
+                            if ($evt['usr_id'] == ANONYMOUS_USER_ID) {
+                                $count_anonymous_reads += $evt['read_count'];
+                            } else {
+                                $count_user_reads += $evt['read_count'];
+                                $count_users++;
+                            }
+                        }
+                    }
+                }
+                if ($lng->lang_key == "en") {
+                    $this->tpl->setVariable("TXT_PROP", 'Downloads');
+                    $this->tpl->setVariable("VAL_PROP", $count_user_reads . ' by ' . $count_users . ' unique users');
+                }
+                if ($lng->lang_key == "ru") {
+                    $this->tpl->setVariable("TXT_PROP", 'Загрузок');
+                    $this->tpl->setVariable("VAL_PROP", $count_user_reads . ', уник. пользователей: ' . $count_users);
+                }
+            }
+            // CHANGES IN CORE *end*
+
 			$this->tpl->setCurrentBlock("item_properties");
 			$this->tpl->parseCurrentBlock();
 		}

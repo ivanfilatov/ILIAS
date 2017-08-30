@@ -111,7 +111,7 @@ class ilNewsForContextBlockGUI extends ilBlockGUI
 			}
 	
 			
-			$news_data = $news_item->getNewsForRefId($_GET["ref_id"], false, false, 0,
+			$news_data = $news_item->getNewsForRefId($_GET["ref_id"], false, true, 0, // CHANGES IN CORE
 				$prevent_aggregation, $forum_grouping);
 
 			$this->acache->storeEntry($ilUser->getId().":".$_GET["ref_id"],

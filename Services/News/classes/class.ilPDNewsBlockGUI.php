@@ -35,7 +35,7 @@ class ilPDNewsBlockGUI extends ilNewsForContextBlockGUI
 		$lng->loadLanguageModule("news");
 		include_once("./Services/News/classes/class.ilNewsItem.php");
 
-		$this->setLimit(5);
+		$this->setLimit(10);
 		$this->setAvailableDetailLevels(3);
 
 		$this->dynamic = false;
