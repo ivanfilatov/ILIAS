@@ -66,7 +66,7 @@ class ilLuceneSearchResultParser
 			return $result;
 		}
 		$hits = new SimpleXMLElement($this->getXML());
-		$result->setLimit($result->getLimit() +  (string) $hits['limit']);
+		$result->setLimit($result->getLimit() + isset($hits['limit']) ? (string) $hits['limit'] : "0"); // CHANGES IN CORE
 		$result->setMaxScore( (string) $hits['maxScore']);
 		$result->setTotalHits((string) $hits['totalHits']);
 		

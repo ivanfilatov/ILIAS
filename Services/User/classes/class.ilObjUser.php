@@ -469,7 +469,7 @@ class ilObjUser extends ilObject
 
 		$insert_array = array(
 			"usr_id" => array("integer", $this->id),
-			"login" => array("text", $this->login),
+			"login" => array("text", trim(strtolower($this->login))), // CHANGES IN CORE
 			"passwd" => array("text", $pw_value),
 			'passwd_enc_type' => array("text", $this->getPasswordEncodingType()),
 			'passwd_salt'     => array("text", $this->getPasswordSalt()),
