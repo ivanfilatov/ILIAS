@@ -34,7 +34,7 @@ class ilNewsForContextBlockGUI extends ilBlockGUI
 		
 		include_once("./Services/News/classes/class.ilNewsItem.php");
 		$this->setBlockId($ilCtrl->getContextObjId());
-		$this->setLimit(5);
+		$this->setLimit(20); // CHANGES IN CORE
 		$this->setAvailableDetailLevels(3);
 		$this->setEnableNumInfo(true);
 		
