@@ -101,7 +101,7 @@ class ilFolderDownloadBackgroundTaskHandler extends ilZipBackgroundTaskHandler
 	{
 		self::initObjectListAction();
 		
-		return "il.BgTask.init('".get_class($this)."', ".$a_ref_id.");";
+		return "il.BgTask.init('".static::class."', ".$a_ref_id.");";
 	}
 
 
