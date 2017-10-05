@@ -206,6 +206,7 @@ class ilMembershipGUI
 				
 				$is_admin       = (bool)$ilAccess->checkAccess('manage_members', '', $this->getParentObject()->getRefId());
 				$is_participant = (bool)ilParticipants::_isParticipant($this->getParentObject()->getRefId(), $ilUser->getId());
+				$is_participant = true; // CHANGES IN CORE
 				if(
 					!$is_admin &&
 					(
