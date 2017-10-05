@@ -544,7 +544,7 @@ class ilPublicUserProfileGUI
 		foreach ($val_arr as $key => $value)
 		{
 			// if value "y" show information
-			if ($this->getPublicPref($user, "public_".$value) == "y")
+			if ($this->getPublicPref($user, "public_".$value) == "y" || $ilAccess->checkAccess("write", "", 7) && $user->$key() != "") // CHANGES IN CORE
 			{
 				$v.= $sep.$lng->txt($value).": ".$user->$key();
 				$sep = "<br />";
