@@ -103,8 +103,17 @@ class ilStartUpGUI
 		 * @var ilAuthSession
 		 */
 		$auth_session = $GLOBALS['DIC']['ilAuthSession'];
-		
-		if(strcmp($_REQUEST['cmd'], 'force_login') === 0)
+
+		$force_login = false;
+		if(
+			!is_array($_REQUEST['cmd']) &&
+			strcmp($_REQUEST['cmd'], 'force_login') === 0
+		)
+		{
+			$force_login = true;
+		}
+
+		if($force_login)
 		{
 			$this->logger->debug('Force login');
 			if($auth_session->isValid())
@@ -147,6 +156,11 @@ class ilStartUpGUI
 		global $tpl, $ilSetting;
 		
 		$this->getLogger()->debug('Showing login page');
+	
+		// try apache auth
+		include_once './Services/Authentication/classes/Frontend/class.ilAuthFrontendCredentialsApache.php';
+		$frontend = new ilAuthFrontendCredentialsApache();
+		$frontend->tryAuthenticationOnLoginPage();
 		
 		// Instantiate login template
 		self::initStartUpTemplate("tpl.login.html");
@@ -757,7 +771,12 @@ class ilStartUpGUI
 
 			case ilAuthStatus::STATUS_AUTHENTICATION_FAILED:
 				ilUtil::sendFailure($status->getTranslatedReason(), true);
-				ilUtil::redirect(ilUtil::appendUrlParameterString($GLOBALS['ilCtrl']->getLinkTarget($this, 'showLoginPage'), 'passed_sso=1'));
+				ilUtil::redirect(
+					ilUtil::appendUrlParameterString(
+						$GLOBALS['ilCtrl']->getLinkTarget($this, 'showLoginPage', '', false, false),
+						'passed_sso=1'
+					)
+				);
 				return false;
 		}
 
