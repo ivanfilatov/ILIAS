@@ -116,6 +116,14 @@ class ilSurveyEvaluationGUI
 			$this->ctrl->getLinkTarget($this, "evaluationdetails"), 
 			array("evaluationdetails")
 		);
+
+        // CHANGES IN CORE *start*
+        $ilTabs->addSubTabTarget(
+            "My results",
+            $this->ctrl->getLinkTarget($this, "evaluationpersonal"),
+            array("evaluationpersonal")
+        );
+        // CHANGES IN CORE *end*
 		
 		if ($ilAccess->checkAccess("write", "", $this->object->getRefId()))
 		{
@@ -1709,6 +1717,146 @@ class ilSurveyEvaluationGUI
 		}
 		
 	}
+
+    // CHANGES IN CORE @author Ivan Filatov
+    // new function for personal evaluation / My results
+    function evaluationpersonal()
+    {
+        global $rbacsystem, $ilToolbar, $DIC, $ilUser;
+
+        $details = 1;
+
+        $ui_factory = $DIC->ui()->factory();
+        $ui_renderer = $DIC->ui()->renderer();
+
+        // auth
+        if (!$rbacsystem->checkAccess("read", $_GET["ref_id"])) {
+            ilUtil::sendFailure($this->lng->txt("permission_denied"));
+            return;
+        }
+
+        // determine lecturer
+        $qcheck = $this->object->getSurveyQuestions();
+        $user_is_lecturer = false;
+        $user_is_figurant = false;
+        foreach ($qcheck as $qck) {
+            if (preg_match("/lect_(att|evalhse|evalicef)_" . $ilUser->login . "/", $qck["label"])) {
+                $user_is_lecturer = true;
+            }
+            if (mb_stripos($qck["label"], $ilUser->login)) {
+                $user_is_figurant = true;
+                break;
+            }
+        }
+
+        if (!$user_is_figurant) {
+            ilUtil::sendFailure($this->lng->txt("permission_denied"));
+            return;
+        }
+
+        $ilToolbar->setFormAction($this->ctrl->getFormAction($this));
+        include_once "Services/Form/classes/class.ilPropertyFormGUI.php";
+
+        $this->tpl->addBlockFile("ADM_CONTENT", "adm_content", "tpl.il_svy_svy_evaluation.html", "Modules/Survey");
+
+        $results = array();
+
+        $captions = new ilSelectInputGUI($this->lng->txt("svy_eval_captions"), "cp");
+        $captions->setOptions(array(
+            "ap" => $this->lng->txt("svy_eval_captions_abs_perc"),
+            "a" => $this->lng->txt("svy_eval_captions_abs"),
+            "p" => $this->lng->txt("svy_eval_captions_perc")
+        ));
+        $captions->setValue($_POST["cp"]);
+        $ilToolbar->addInputItem($captions, true);
+
+        $view = new ilSelectInputGUI($this->lng->txt("svy_eval_view"), "vw");
+        $view->setOptions(array(
+            "tc" => $this->lng->txt("svy_eval_view_tables_charts"),
+            "t" => $this->lng->txt("svy_eval_view_tables"),
+            "c" => $this->lng->txt("svy_eval_view_charts")
+        ));
+        $view->setValue($_POST["vw"]);
+        $ilToolbar->addInputItem($view, true);
+
+        include_once "Services/UIComponent/Button/classes/class.ilSubmitButton.php";
+        $button = ilSubmitButton::getInstance();
+        $button->setCaption("ok");
+        $button->setCommand("evaluationpersonal");
+        $button->setOmitPreventDoubleSubmission(true);
+        $ilToolbar->addButtonInstance($button);
+
+        $ilToolbar->addSeparator();
+
+        //templates: results, table of contents
+        $dtmpl = new ilTemplate("tpl.il_svy_svy_results_details.html", true, true, "Modules/Survey");
+        $toc_tpl = new ilTemplate("tpl.svy_results_table_contents.html", true, true, "Modules/Survey");
+        $this->lng->loadLanguageModule("content");
+        $toc_tpl->setVariable("TITLE_TOC", $this->lng->txt('cont_toc'));
+
+        $finished_ids = null;
+
+        $details_figure = $_POST["cp"]
+            ? $_POST["cp"]
+            : "ap";
+        $details_view = $_POST["vw"]
+            ? $_POST["vw"]
+            : "tc";
+
+        $results_found = false;
+
+        // parse answer data in evaluation results
+        include_once "./Modules/SurveyQuestionPool/classes/class.SurveyQuestion.php";
+        foreach ($this->object->getSurveyQuestions() as $qdata) {
+            if (mb_stripos($qdata["label"], $ilUser->login) || $user_is_lecturer) // THIS IS IMPORTANT!!!
+            {
+                $results_found = true;
+
+                $q_eval = SurveyQuestion::_instanciateQuestionEvaluation($qdata["question_id"], $finished_ids);
+                $q_res = $q_eval->getResults();
+                $results[] = $q_res;
+
+                if ($details) {
+                    //$this->renderDetails($details_view, $details_figure, $dtmpl, $qdata, $q_eval, $q_res);
+                    $this->renderDetails($details_view, $details_figure, $qdata, $q_eval, $q_res);
+
+                    // TABLE OF CONTENTS
+                    if ($qdata["questionblock_id"] && $qdata["questionblock_id"] != $this->last_questionblock_id) {
+                        $qblock = ilObjSurvey::_getQuestionblock($a_qdata["questionblock_id"]);
+                        if ($qblock["show_blocktitle"]) {
+                            $toc_tpl->setCurrentBlock("toc_bl");
+                            $toc_tpl->setVariable("TOC_ITEM", $qdata["questionblock_title"]);
+                            $toc_tpl->parseCurrentBlock();
+                        }
+                        $this->last_questionblock_id = $qdata["questionblock_id"];
+                    }
+                    $anchor_id = "svyrdq" . $qdata["question_id"];
+                    $toc_tpl->setCurrentBlock("toc_bl");
+                    $toc_tpl->setVariable("TOC_ITEM", $qdata["title"]);
+                    $toc_tpl->setVariable("TOC_ID", $anchor_id);
+                    $toc_tpl->parseCurrentBlock();
+                }
+            }
+        }
+        //TABLE OF CONTENTS
+        if ($results_found) {
+            $panel_toc = $ui_factory->panel()->standard("", $ui_factory->legacy($toc_tpl->get()));
+            $render_toc = $ui_renderer->render($panel_toc);
+            $dtmpl->setVariable("PANEL_TOC", $render_toc);
+        }
+
+        //REPORT
+        $report_title = "";
+        $panel_report = $ui_factory->panel()->report($report_title, $this->array_panels);
+        $render_report = $ui_renderer->render($panel_report);
+        $dtmpl->setVariable("PANEL_REPORT", $results_found ? $render_report : str_replace('<div class="panel-body"></div>', '<div class="panel-body">No results found</div>', $render_report));
+
+        //print the main template
+        $this->tpl->setVariable('DETAIL', $dtmpl->get());
+
+        unset($dtmpl);
+        unset($table_gui);
+    }
 }
 
 ?>

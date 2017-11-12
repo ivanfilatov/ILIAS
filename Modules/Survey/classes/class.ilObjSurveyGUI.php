@@ -418,7 +418,23 @@ class ilObjSurveyGUI extends ilObjectGUI
 				$this->ctrl->getLinkTargetByClass(array("ilobjsurveygui", "illearningprogressgui"), ""),
 				"",
 				array("illplistofobjectsgui", "illplistofsettingsgui", "illearningprogressgui", "illplistofprogressgui"));
-		}		
+		}
+
+        // CHANGES IN CORE *start*
+        $svy_questions = $this->object->getSurveyQuestions();
+        $display_my_results = false;
+        foreach ($svy_questions as $question_check) {
+            if (mb_stripos($question_check["label"], $ilUser->login)) {
+                $display_my_results = true;
+                break;
+            }
+        }
+        if ($display_my_results) {
+            $this->tabs_gui->addTab("svy_results_personal",
+                "My results / Мои результаты",
+                $this->ctrl->getLinkTargetByClass("ilsurveyevaluationgui", "evaluationpersonal"));
+        }
+        // CHANGES IN CORE *end*
 
 		if ($this->checkPermissionBool("write"))
 		{
