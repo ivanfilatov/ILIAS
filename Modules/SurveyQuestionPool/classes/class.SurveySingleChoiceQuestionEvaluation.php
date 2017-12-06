@@ -11,6 +11,32 @@ include_once "Modules/SurveyQuestionPool/classes/class.SurveyQuestionEvaluation.
  */
 class SurveySingleChoiceQuestionEvaluation extends SurveyQuestionEvaluation
 {
+    // CHANGES IN CORE *start*
+    //
+    // RESULTS
+    //
+
+    protected function parseResults(ilSurveyEvaluationResults $a_results, array $a_answers, SurveyCategories $a_categories = null)
+    {
+        parent::parseResults($a_results, $a_answers, $a_categories);
+
+        // add arithmetic mean
+        $total = $sum = 0;
+        if ($a_categories) {
+            foreach ($a_answers as $answers) {
+                foreach ($answers as $answer) {
+                    $cat_a = $a_categories->getCategory($answer['value']);
+                    if ($cat_a->neutral == 0) {
+                        $sum += $cat_a->scale;
+                        $total += 1;
+                    }
+                }
+            }
+            $a_results->setMean(round($sum / $total, 2));
+        }
+    }
+    // CHANGES IN CORE *end*
+
 	//
 	// EXPORT
 	//		

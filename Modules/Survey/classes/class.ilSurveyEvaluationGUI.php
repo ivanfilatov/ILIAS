@@ -365,6 +365,7 @@ class ilSurveyEvaluationGUI
 		$title_row[] = $this->lng->txt("mode_nr_of_selections");
 		$title_row[] = $this->lng->txt("median");
 		$title_row[] = $this->lng->txt("arithmetic_mean");
+		$title_row[] = "St. dev"; // CHANGES IN CORE
 		
 		// creating container
 		switch ($_POST["export_format"])
@@ -372,6 +373,10 @@ class ilSurveyEvaluationGUI
 			case self::TYPE_XLS:
 				include_once "Services/Excel/classes/class.ilExcel.php";
 				$excel = new ilExcel();
+				// CHANGES IN CORE *start*
+                $excel->addSheet("(".mb_substr($this->object->getTitle(), 15, 3).") ".mb_substr($this->object->getTitle(), 29)); // 15 for spring, 13 for fall
+                $excel->setCellArray(['Technical data'], "A1");
+                // CHANGES IN CORE *end*
 				$excel->addSheet($this->lng->txt("svy_eval_cumulated"));				
 				$excel->setCellArray(array($title_row), "A1");
 				$excel->setBold("A1:".$excel->getColumnCoord(sizeof($title_row)-1)."1");
@@ -395,7 +400,7 @@ class ilSurveyEvaluationGUI
 			switch ($_POST["export_format"])
 			{
 				case self::TYPE_XLS:
-					$excel->setActiveSheet(0);		
+					$excel->setActiveSheet(1); // CHANGES IN CORE
 					foreach($ov_rows as $row)
 					{
 						foreach($row as $col => $value)
@@ -403,7 +408,7 @@ class ilSurveyEvaluationGUI
 							$excel->setCell($ov_row, $col, $value);
 						}
 						$ov_row++;
-					}					
+					}
 					break;
 				
 				case self::TYPE_SPSS:					
@@ -900,18 +905,20 @@ class ilSurveyEvaluationGUI
 					if($qdata["questionblock_id"] &&
 						$qdata["questionblock_id"] != $this->last_questionblock_id)
 					{
-						$qblock = ilObjSurvey::_getQuestionblock($a_qdata["questionblock_id"]);
+						$qblock = ilObjSurvey::_getQuestionblock($qdata["questionblock_id"]); // CHANGES IN CORE
 						if($qblock["show_blocktitle"])
 						{
+                            $anchor_id = "svyrdqb".$qdata["questionblock_id"]; // CHANGES IN CORE
 							$toc_tpl->setCurrentBlock("toc_bl");
 							$toc_tpl->setVariable("TOC_ITEM", $qdata["questionblock_title"]);
+                            $toc_tpl->setVariable("TOC_ID", $anchor_id); // CHANGES IN CORE
 							$toc_tpl->parseCurrentBlock();
 						}
 						$this->last_questionblock_id = $qdata["questionblock_id"];
 					}
 					$anchor_id = "svyrdq".$qdata["question_id"];
 					$toc_tpl->setCurrentBlock("toc_bl");
-					$toc_tpl->setVariable("TOC_ITEM", $qdata["title"]);
+					$toc_tpl->setVariable("TOC_ITEM", ($qdata["questionblock_id"] ? '&bull; ' : '').$qdata["title"]); // CHANGES IN CORE
 					$toc_tpl->setVariable("TOC_ID", $anchor_id);
 					$toc_tpl->parseCurrentBlock();
 				}
@@ -1031,7 +1038,14 @@ class ilSurveyEvaluationGUI
 			{
 				$kv["arithmetic_mean"] = $question_res->getMean();																										
 			}
-		}
+		} else {
+		    // CHANGES IN CORE *start*
+            if($question_res->getMean() !== null)
+            {
+                $kv["arithmetic_mean"] = $question_res->getMean();
+            }
+            // CHANGES IN CORE *end*
+        }
 
 		$svy_type_title = SurveyQuestion::_getQuestionTypeName($question->getQuestionType());
 		$qst_title = $question->getTitle();
@@ -1047,12 +1061,19 @@ class ilSurveyEvaluationGUI
 		//anchor in title. Used in TOC
 		$anchor_id = "svyrdq".$question->getId();
 		$title = "<span id='$anchor_id'>$qst_title</span>";
+		// CHANGES IN CORE *start*
+        if($a_qdata["questionblock_id"]) {
+            $anchor_id = "svyrdqb".$a_qdata["questionblock_id"];
+            $qbtitle = "<span style='font-weight: bold' id='$anchor_id'>{$a_qdata["questionblock_title"]}</span>: ";
+            $title = $qbtitle . $title;
+        }
+        // CHANGES IN CORE *end*
 		$panel_qst_card = $ui_factory->panel()->sub($title, $ui_factory->legacy($svy_text))
 			->withCard($ui_factory->card($svy_type_title)->withSections(array($ui_factory->legacy($card_table_tpl->get()))));
 		array_push($this->array_panels, $panel_qst_card);
 
-		// grid		
-		if($a_details_parts == "t" || 
+		// grid
+		if($a_details_parts == "t" ||
 			$a_details_parts == "tc")
 		{
 			$grid = $a_eval->getGrid(
@@ -1821,18 +1842,23 @@ class ilSurveyEvaluationGUI
                     $this->renderDetails($details_view, $details_figure, $qdata, $q_eval, $q_res);
 
                     // TABLE OF CONTENTS
-                    if ($qdata["questionblock_id"] && $qdata["questionblock_id"] != $this->last_questionblock_id) {
-                        $qblock = ilObjSurvey::_getQuestionblock($a_qdata["questionblock_id"]);
-                        if ($qblock["show_blocktitle"]) {
+                    if($qdata["questionblock_id"] &&
+                        $qdata["questionblock_id"] != $this->last_questionblock_id)
+                    {
+                        $qblock = ilObjSurvey::_getQuestionblock($qdata["questionblock_id"]);
+                        if($qblock["show_blocktitle"])
+                        {
+                            $anchor_id = "svyrdqb".$qdata["questionblock_id"];
                             $toc_tpl->setCurrentBlock("toc_bl");
                             $toc_tpl->setVariable("TOC_ITEM", $qdata["questionblock_title"]);
+                            $toc_tpl->setVariable("TOC_ID", $anchor_id);
                             $toc_tpl->parseCurrentBlock();
                         }
                         $this->last_questionblock_id = $qdata["questionblock_id"];
                     }
                     $anchor_id = "svyrdq" . $qdata["question_id"];
                     $toc_tpl->setCurrentBlock("toc_bl");
-                    $toc_tpl->setVariable("TOC_ITEM", $qdata["title"]);
+                    $toc_tpl->setVariable("TOC_ITEM", ($qdata["questionblock_id"] ? '&bull; ' : '').$qdata["title"]);
                     $toc_tpl->setVariable("TOC_ID", $anchor_id);
                     $toc_tpl->parseCurrentBlock();
                 }
