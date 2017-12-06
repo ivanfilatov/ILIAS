@@ -1928,6 +1928,23 @@ class ilObjectListGUI
                     $this->tpl->setVariable("VAL_PROP", $count_user_reads . ', уник. пользователей: ' . $count_users);
                 }
             }
+            if ($this->type == "svy") {
+                require_once 'Modules/Survey/classes/class.ilObjSurvey.php';
+                $survey = new ilObjSurvey($this->obj_id, false);
+                $finished = count($survey->getSurveyFinishedIds());
+                $invited = count($survey->getInvitedUsers());
+                $this->tpl->touchBlock("separator_prop");
+                $this->tpl->touchBlock("newline_prop");
+                $this->tpl->touchBlock("std_prop");
+                if ($lng->lang_key == "en") {
+                    $this->tpl->setVariable("TXT_PROP", 'Finished');
+                    $this->tpl->setVariable("VAL_PROP", $finished . ' (invited: ' . $invited . ')');
+                }
+                if ($lng->lang_key == "ru") {
+                    $this->tpl->setVariable("TXT_PROP", 'Закончили');
+                    $this->tpl->setVariable("VAL_PROP", $finished . ', (приглашено: ' . $invited . ')');
+                }
+            }
             // CHANGES IN CORE *end*
 
 			$this->tpl->setCurrentBlock("item_properties");

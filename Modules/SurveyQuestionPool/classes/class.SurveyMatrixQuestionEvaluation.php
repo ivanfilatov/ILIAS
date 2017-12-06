@@ -18,29 +18,57 @@ class SurveyMatrixQuestionEvaluation extends SurveyQuestionEvaluation
 	public function getResults()
 	{
 		$results = array();
-		
+
 		$answers = $this->getAnswerData();
-		
+
 		// parse rows
 		for ($r = 0; $r < $this->question->getRowCount(); $r++)
-		{											
-			$row_results = new ilSurveyEvaluationResults($this->question);	
-					
+		{
+			$row_results = new ilSurveyEvaluationResults($this->question);
+
 			$this->parseResults(
-				$row_results, 
-				(array)$answers[$r], 
+				$row_results,
+				(array)$answers[$r],
 				$this->question->getColumns()
 			);
-				
+
 			$results[] = array(
 				$this->question->getRow($r)->title,
 				$row_results
 			);
 		}
-		
+
 		return $results;
 	}
-	
+
+    // CHANGES IN CORE *start*
+    //
+    // RESULTS
+    //
+
+    protected function parseResults(ilSurveyEvaluationResults $a_results, array $a_answers, SurveyCategories $a_categories = null)
+    {
+        parent::parseResults($a_results, $a_answers, $a_categories);
+
+        if ($a_results->getMean() == null) {
+            $total = $sum = 0;
+            $answer_data = $this->getAnswerData();
+            foreach ($answer_data as $answer_datum) {
+                foreach ($answer_datum as $answers) {
+                    foreach ($answers as $answer) {
+                        $cat_a = $a_categories->getCategory($answer['value']);
+                        if ($cat_a->neutral == 0) {
+                            $sum += $cat_a->scale;
+                            $total += 1;
+                        }
+                    }
+                }
+            }
+            $a_results->setMean(round($sum / $total, 2));
+        }
+    }
+    // CHANGES IN CORE *end*
+
 	
 	//
 	// DETAILS
@@ -65,11 +93,19 @@ class SurveyMatrixQuestionEvaluation extends SurveyQuestionEvaluation
 			{
 				$res["cols"][] = $var->cat->title;
 			}
+			$res["cols"][] = 'μ'; // CHANGES IN CORE
+            $res["cols"][] = 'σ'; // CHANGES IN CORE
 		}
 		
 		foreach($a_results as $results_row)
-		{																				
-			$parsed_row = array(
+		{
+            // CHANGES IN CORE *start*
+		    $arithmetic_nom = 0;
+            $square_sum = 0;
+            $arithmetic_denom = 0;
+            // CHANGES IN CORE *end*
+
+		    $parsed_row = array(
 				$results_row[0]
 			);
 			
@@ -94,7 +130,30 @@ class SurveyMatrixQuestionEvaluation extends SurveyQuestionEvaluation
 					{
 						$parsed_row[] = $perc;
 					}
+
+                    // CHANGES IN CORE *start*
+                    if ($var->cat->neutral == 0) {
+                        $arithmetic_nom += $var->cat->scale * $var->abs;
+                        $square_sum += $var->cat->scale * $var->cat->scale * $var->abs;
+                        $arithmetic_denom += $var->abs;
+                    }
+                    // CHANGES IN CORE *end*
 				}
+
+                // CHANGES IN CORE *start*
+                if ($arithmetic_denom > 1) {
+                    $arithmetic_mean = $arithmetic_nom / $arithmetic_denom;
+                    $standart_deviation = sqrt(($arithmetic_denom / ($arithmetic_denom - 1)) * ($square_sum / $arithmetic_denom - $arithmetic_mean * $arithmetic_mean));
+                } elseif ($arithmetic_denom == 1) {
+                    $arithmetic_mean = $arithmetic_nom;
+                    $standart_deviation = 0;
+                } else {
+                    $arithmetic_mean = 0;
+                    $standart_deviation = 0;
+                }
+                $parsed_row[] = sprintf("%.2f", $arithmetic_mean);
+                $parsed_row[] = sprintf("%.2f", $standart_deviation);
+                // CHANGES IN CORE *end*
 			}
 			
 			$res["rows"][] = $parsed_row;

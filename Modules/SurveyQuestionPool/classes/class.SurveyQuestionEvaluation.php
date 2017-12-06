@@ -13,8 +13,8 @@ abstract class SurveyQuestionEvaluation
 {
 	protected $question; // [SurveyQuestion]
 	protected $finished_ids; // [array]
-	protected $chart_width = 400;
-	protected $chart_height = 300;
+	protected $chart_width = 800; // CHANGES IN CORE
+	protected $chart_height = 600; // CHANGES IN CORE
 	
 	/**
 	 * Constructor
@@ -362,6 +362,8 @@ abstract class SurveyQuestionEvaluation
 		$chart->setsize($this->chart_width, $this->chart_height);
 					
 		$vars = $a_results->getVariables();
+
+		//die(var_dump($vars));
 		
 		$legend = $labels = array();			
 		foreach($vars as $idx => $var)
