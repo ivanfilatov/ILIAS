@@ -18,26 +18,26 @@ class SurveyMatrixQuestionEvaluation extends SurveyQuestionEvaluation
 	public function getResults()
 	{
 		$results = array();
-
+		
 		$answers = $this->getAnswerData();
-
+		
 		// parse rows
 		for ($r = 0; $r < $this->question->getRowCount(); $r++)
-		{
-			$row_results = new ilSurveyEvaluationResults($this->question);
-
+		{											
+			$row_results = new ilSurveyEvaluationResults($this->question);	
+					
 			$this->parseResults(
-				$row_results,
-				(array)$answers[$r],
+				$row_results, 
+				(array)$answers[$r], 
 				$this->question->getColumns()
 			);
-
+				
 			$results[] = array(
 				$this->question->getRow($r)->title,
 				$row_results
 			);
 		}
-
+		
 		return $results;
 	}
 
@@ -96,19 +96,21 @@ class SurveyMatrixQuestionEvaluation extends SurveyQuestionEvaluation
 			$res["cols"][] = 'μ'; // CHANGES IN CORE
             $res["cols"][] = 'σ'; // CHANGES IN CORE
 		}
-		
+
+		$q_counter = 0;
 		foreach($a_results as $results_row)
 		{
             // CHANGES IN CORE *start*
-		    $arithmetic_nom = 0;
+            $arithmetic_nom = 0;
             $square_sum = 0;
             $arithmetic_denom = 0;
             // CHANGES IN CORE *end*
 
-		    $parsed_row = array(
-				$results_row[0]
+			#20363
+			$parsed_row = array(
+				++$q_counter.". ".$results_row[0]
 			);
-			
+
 			$vars = $results_row[1]->getVariables();
 			if($vars)
 			{
@@ -197,20 +199,28 @@ class SurveyMatrixQuestionEvaluation extends SurveyQuestionEvaluation
 		$chart->setColors($colors);
 
 		// :TODO:
-		$chart->setsize($this->chart_width, $this->chart_height);
+		//$chart->setsize($this->chart_width, $this->chart_height);
 					
 		$data = $labels = $legend = array();
 		
 		$row_idx = sizeof($a_results);
-				
+
+		$row_counter = 0;
+		$text_shortened = false;
 		foreach($a_results as $row)
 		{
 			$row_idx--;
-			
+
 			$row_title = $row[0];
 			$row_results = $row[1];
-			
-			$labels[$row_idx] = wordwrap(ilUtil::shortenText($row_title, 60, true), 30, "<br />");
+
+			#20363
+			$row_title = ++$row_counter.". ".$row_title;
+			$labels[$row_idx] = ilUtil::shortenText($row_title, 50, true);
+			if($labels[$row_idx] != $row_title) {
+				$text_shortened = true;
+			}
+			//$labels[$row_idx] = wordwrap(ilUtil::shortenText($row_title, 50, true), 30, "<br />");
 			
 			$vars = $row_results->getVariables();
 			if($vars)
@@ -234,7 +244,15 @@ class SurveyMatrixQuestionEvaluation extends SurveyQuestionEvaluation
 				}				
 			}
 		}
-		
+
+		//Chart height depending on the number of questions. Not fixed anymore.
+		$this->chart_height = count($a_results)*40;
+		//Chart width 500px if one or + question string are longer than 60 char. Otherwise the default width still aplied.
+		if($text_shortened) {
+			$this->chart_width = 500;
+		}
+		$chart->setSize($this->chart_width, $this->chart_height);
+
 		foreach($data as $var)
 		{
 			$chart->addData($var);			
