@@ -64,7 +64,11 @@ class SurveyMatrixQuestionEvaluation extends SurveyQuestionEvaluation
                     }
                 }
             }
-            $a_results->setMean(round($sum / $total, 2));
+            if ($total > 0) {
+                $a_results->setMean(round($sum / $total, 2));
+            } else {
+                $a_results->setMean(0);
+            }
         }
     }
     // CHANGES IN CORE *end*
