@@ -379,7 +379,7 @@ class ilPublicUserProfileGUI
 		}
         */
 
-        global $ilAccess, $rbacreview;
+        global $ilAccess, $rbacreview, $ilClientIniFile; // CHANGES IN CORE
         if ($ilAccess->checkAccess("write", "", 7)) {
             $tpl->setCurrentBlock("link");
             if ($lng->lang_key == "ru") {
@@ -387,7 +387,7 @@ class ilPublicUserProfileGUI
             } else {
                 $tpl->setVariable("TXT_LINK", "Edit Profile");
             }
-            $tpl->setVariable("HREF_LINK", "ilias.php?ref_id=7&admin_mode=settings&obj_id=" . $user->getId() . "&cmd=view&cmdClass=ilobjusergui&cmdNode=5g:c8&baseClass=ilAdministrationGUI");
+            $tpl->setVariable("HREF_LINK", "ilias.php?ref_id=7&admin_mode=settings&obj_id=" . $user->getId() . "&cmd=view&cmdClass=ilobjusergui&cmdNode=" . $ilClientIniFile->readVariable('usr_settings', 'usr_edit_cmd_node') . "&baseClass=ilAdministrationGUI");
         }
 
         include_once './Services/AccessControl/classes/class.ilObjRole.php';

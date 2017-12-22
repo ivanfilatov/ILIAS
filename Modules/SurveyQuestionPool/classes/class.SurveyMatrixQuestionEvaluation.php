@@ -18,26 +18,26 @@ class SurveyMatrixQuestionEvaluation extends SurveyQuestionEvaluation
 	public function getResults()
 	{
 		$results = array();
-		
+
 		$answers = $this->getAnswerData();
-		
+
 		// parse rows
 		for ($r = 0; $r < $this->question->getRowCount(); $r++)
-		{											
-			$row_results = new ilSurveyEvaluationResults($this->question);	
-					
+		{
+			$row_results = new ilSurveyEvaluationResults($this->question);
+
 			$this->parseResults(
-				$row_results, 
-				(array)$answers[$r], 
+				$row_results,
+				(array)$answers[$r],
 				$this->question->getColumns()
 			);
-				
+
 			$results[] = array(
 				$this->question->getRow($r)->title,
 				$row_results
 			);
 		}
-		
+
 		return $results;
 	}
 
@@ -64,7 +64,11 @@ class SurveyMatrixQuestionEvaluation extends SurveyQuestionEvaluation
                     }
                 }
             }
-            $a_results->setMean(round($sum / $total, 2));
+            if ($total > 0) {
+                $a_results->setMean(round($sum / $total, 2));
+            } else {
+                $a_results->setMean(0);
+            }
         }
     }
     // CHANGES IN CORE *end*
@@ -109,6 +113,7 @@ class SurveyMatrixQuestionEvaluation extends SurveyQuestionEvaluation
 			#20363
 			$parsed_row = array(
 				++$q_counter.". ".$results_row[0]
+
 			);
 
 			$vars = $results_row[1]->getVariables();
