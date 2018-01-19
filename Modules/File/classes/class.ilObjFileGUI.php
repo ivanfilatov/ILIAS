@@ -688,6 +688,11 @@ class ilObjFileGUI extends ilObject2GUI
 			require_once 'Services/Tracking/classes/class.ilLPStatusWrapper.php';
 			ilLPStatusWrapper::_updateStatus($this->object->getId(), $ilUser->getId());
 
+            // CHANGES IN CORE *start*
+            $logger = ilLoggerFactory::getLogger('file');
+            $logger->info("Downloading file {$this->object->getId()} by user {$ilUser->getLogin()}");
+            // CHANGES IN CORE *end*
+
 			$this->object->sendFile($_GET["hist_id"]);
 		}
 		else

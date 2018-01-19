@@ -943,9 +943,13 @@ class ilUserProfile
 		global $ilSetting;
 
         // CHANGES IN CORE *start*
-        if (stripos($a_user->getPersonalPicturePath(), "no_photo")) {
-            return true;
-        }
+		try {
+            if (stripos($a_user->getPersonalPicturePath(), "no_photo")) {
+                return true;
+            }
+        } catch (Error $e) {
+			// do nothing, just skip (occurs when SOAP is called)
+		}
         // CHANGES IN CORE *end*
 		
 		// standard fields

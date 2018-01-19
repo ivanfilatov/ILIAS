@@ -116,14 +116,6 @@ class ilSurveyEvaluationGUI
 			$this->ctrl->getLinkTarget($this, "evaluationdetails"), 
 			array("evaluationdetails")
 		);
-
-        // CHANGES IN CORE *start*
-        $ilTabs->addSubTabTarget(
-            "My results",
-            $this->ctrl->getLinkTarget($this, "evaluationpersonal"),
-            array("evaluationpersonal")
-        );
-        // CHANGES IN CORE *end*
 		
 		if ($ilAccess->checkAccess("write", "", $this->object->getRefId()))
 		{
@@ -133,6 +125,14 @@ class ilSurveyEvaluationGUI
 				array("evaluationuser")
 			);
 		}
+
+        // CHANGES IN CORE *start*
+        $ilTabs->addSubTabTarget(
+            "My results",
+            $this->ctrl->getLinkTarget($this, "evaluationpersonal"),
+            array("evaluationpersonal")
+        );
+        // CHANGES IN CORE *end*
 	}
 
 	
@@ -373,10 +373,6 @@ class ilSurveyEvaluationGUI
 			case self::TYPE_XLS:
 				include_once "Services/Excel/classes/class.ilExcel.php";
 				$excel = new ilExcel();
-				// CHANGES IN CORE *start*
-                $excel->addSheet("(".mb_substr($this->object->getTitle(), 15, 3).") ".mb_substr($this->object->getTitle(), 29)); // 15 for spring, 13 for fall
-                $excel->setCellArray(['Technical data'], "A1");
-                // CHANGES IN CORE *end*
 				$excel->addSheet($this->lng->txt("svy_eval_cumulated"));				
 				$excel->setCellArray(array($title_row), "A1");
 				$excel->setBold("A1:".$excel->getColumnCoord(sizeof($title_row)-1)."1");
@@ -400,7 +396,6 @@ class ilSurveyEvaluationGUI
 			switch ($_POST["export_format"])
 			{
 				case self::TYPE_XLS:
-					$excel->setActiveSheet(1); // CHANGES IN CORE
 					foreach($ov_rows as $row)
 					{
 						foreach($row as $col => $value)

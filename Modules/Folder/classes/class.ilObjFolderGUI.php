@@ -418,7 +418,18 @@ class ilObjFolderGUI extends ilContainerGUI
 
 		if ($ilAccess->checkAccess("read", "", $a_target))
 		{
+            // CHANGES IN CORE *start*
+			global $ilUser;
+            $logger = ilLoggerFactory::getLogger('file');
+            $logger->info("Showing folder {$a_target} to user {$ilUser->getLogin()}");
+            // CHANGES IN CORE *end*
 			ilObjectGUI::_gotoRepositoryNode($a_target);
+		} else {
+            // CHANGES IN CORE *start*
+            global $ilUser;
+            $logger = ilLoggerFactory::getLogger('file');
+            $logger->info("Access to folder {$a_target} denied to user {$ilUser->getLogin()}");
+            // CHANGES IN CORE *end*
 		}
 		$ilErr->raiseError($lng->txt("msg_no_perm_read"), $ilErr->FATAL);
 	}
