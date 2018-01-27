@@ -160,7 +160,7 @@ class PHPMailer
      * Options: "mail", "sendmail", or "smtp".
      * @var string
      */
-    public $Mailer = 'mail';
+    public $Mailer = 'smtp';
 
     /**
      * The path to the sendmail program.
@@ -226,14 +226,14 @@ class PHPMailer
      * Hosts will be tried in order.
      * @var string
      */
-    public $Host = 'localhost';
+    public $Host = 'smtp.hse.ru';
 
     /**
      * The default SMTP server port.
      * @var integer
      * @TODO Why is this needed when the SMTP class takes care of it?
      */
-    public $Port = 25;
+    public $Port = 587;
 
     /**
      * The SMTP HELO of the message.
@@ -242,14 +242,14 @@ class PHPMailer
      * @var string
      * @see PHPMailer::$Hostname
      */
-    public $Helo = '';
+    public $Helo = '172.28.1.26';
 
     /**
      * What kind of encryption to use on the SMTP connection.
      * Options: '', 'ssl' or 'tls'
      * @var string
      */
-    public $SMTPSecure = '';
+    public $SMTPSecure = 'tls';
 
     /**
      * Whether to enable TLS encryption automatically if a server supports it,
@@ -266,25 +266,25 @@ class PHPMailer
      * @see PHPMailer::$Username
      * @see PHPMailer::$Password
      */
-    public $SMTPAuth = false;
+    public $SMTPAuth = true;
 
     /**
      * Options array passed to stream_context_create when connecting via SMTP.
      * @var array
      */
-    public $SMTPOptions = array();
+    public $SMTPOptions = array('ssl' => array('verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true));
 
     /**
      * SMTP username.
      * @var string
      */
-    public $Username = '';
+    public $Username = 'icef';
 
     /**
      * SMTP password.
      * @var string
      */
-    public $Password = '';
+    public $Password = 'Mriw63R';
 
     /**
      * SMTP auth type.
@@ -350,7 +350,7 @@ class PHPMailer
      * requires an explicit call to smtpClose().
      * @var boolean
      */
-    public $SMTPKeepAlive = false;
+    public $SMTPKeepAlive = true;
 
     /**
      * Whether to split multiple to addresses into multiple messages
