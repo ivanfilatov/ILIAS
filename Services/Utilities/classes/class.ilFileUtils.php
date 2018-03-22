@@ -533,6 +533,8 @@ class ilFileUtils
 	public static function getValidExtensions()
 	{
 		return array(
+		    'wf1', // CHANGES IN CORE
+
 			'3gp', 	// VIDEO__3_GPP
 			'aif', 	// AUDIO__AIFF
 			'aifc', // AUDIO__AIFF
