@@ -142,6 +142,15 @@ class ilSoapClient
 			$this->log->debug('Using wsdl: ' . $this->getServer());
 			$this->log->debug('Using connection timeout: ' . $this->getTimeout());
 			$this->log->debug('Using response timeout: ' . $this->getResponseTimeout());
+
+            $context = stream_context_create([
+                'ssl' => [
+                    // set some SSL/TLS specific options
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true
+                ]
+            ]);
 			
 			$this->setSocketTimeout(true);
 			$this->client = new SoapClient(
@@ -149,7 +158,8 @@ class ilSoapClient
 				array(
 					'exceptions' => true,
 					'trace' => 1,
-					'connection_timeout' => (int) $this->getTimeout()
+					'connection_timeout' => (int) $this->getTimeout(),
+                    'stream_context' => $context
 				)
 			);
 			return true;
