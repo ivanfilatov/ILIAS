@@ -214,6 +214,7 @@ assessment#:#autosave#:#Automatic saving
 assessment#:#autosave_info#:#Answers are automatically saved in specified intervals to avoid data loss.
 assessment#:#autosave_ival#:#Interval
 assessment#:#for#:#for
+assessment#:#question_browse_area_info#:#Please select an object from which you want to import questions.
 assessment#:#wait_for_next_pass_hint_msg#:#Additional pass is possible on time: %s
 assessment#:#tst_pass_waiting_enabled#:#Force Waiting Time between Passes
 assessment#:#tst_pass_waiting_info#:#With this option additional passes can not be started before the defined time is lapsed relating to the last finished pass.
@@ -1051,7 +1052,7 @@ assessment#:#test_reference#:#Test Reference###deprecated
 assessment#:#text_answers_saved#:#Essay points modified!###deprecated
 assessment#:#text_correct#:#Correct Text
 assessment#:#text_gap#:#Text Gap
-assessment#:#text_maximum_chars_allowed#:#Please do not enter more than a maximum of %s characters. Any characters above will be cut.
+assessment#:#text_maximum_chars_allowed#:#Please do not enter more than a maximum of %s characters. Additional characters won't get cut, but the exceeding might be considered during scoring.
 assessment#:#text_rating#:#Text Matching Method
 assessment#:#text_wrong#:#Wrong Text
 assessment#:#textsize_errortext_info#:#Enter the text size of the error text in percent if you want another size than 100 percent.
@@ -3607,7 +3608,7 @@ common#:#obj_chac_desc#:#Configure your chat server here. Enable/disable chats.#
 common#:#obj_chac#:#Chat Server###deprecated
 common#:#obj_chap#:#Chapter
 common#:#obj_chat#:#Chat###deprecated
-common#:#obj_cmps_desc#:#General settings for Repository Plugins
+common#:#obj_cmps_desc#:#General settings for Plugins
 common#:#obj_cmps#:#Plugins
 common#:#obj_crs_duplicate#:#Copy Course
 common#:#obj_crs_select#:#-- Please select one course --###deprecated
@@ -9605,7 +9606,7 @@ wiki#:#wiki_change_notification_subject#:#Wiki "%1$s" has been changed: %2$s
 wiki#:#wiki_change_notification_page_body_update#:#the following wiki page has been updated
 wiki#:#wiki_change_notification_page_body_delete#:#the following wiki page has been deleted###deprecated
 wiki#:#wiki_change_notification_page_link#:#URL
-wiki#:#wiki_change_notification_body_new#:#the following wiki page was created###deprecated
+wiki#:#wiki_change_notification_body_new#:#the following wiki page was created
 wiki#:#wiki_change_notification_link#:#URL
 wiki#:#wiki_notification_toggle_info#:#Change Notification###deprecated
 wiki#:#wiki_notification_toggle_wiki_activate#:#Activate for Wiki###deprecated
@@ -12139,9 +12140,9 @@ dcl#:#dcl_change_notification_subject#:#Data Collection "%s" has been changed
 dcl#:#dcl_edit_notification#:#Email Notification on Change###deprecated
 dcl#:#dcl_edit_notification_info#:#You will be notified when any table is edited###deprecated
 dcl#:#dcl_change_notification_link#:#Link to the Data Collection
-dcl#:#dcl_change_notification_dcl_new_record#:#The following Entry has been created
-dcl#:#dcl_change_notification_dcl_update_record#:#The following Entry has been updated
-dcl#:#dcl_change_notification_dcl_delete_record#:#The following Entry page has been deleted###deprecated
+dcl#:#dcl_change_notification_dcl_new_record#:#The following data record has been created
+dcl#:#dcl_change_notification_dcl_update_record#:#The following data record has been updated
+dcl#:#dcl_change_notification_dcl_delete_record#:#The following data record has been deleted
 dcl#:#dcl_change_why_you_receive_this_email#:#You receive this message because you have activated the notification about this data collection.
 dcl#:#dcl_table#:#Table
 dcl#:#dcl_changed_by#:#Changed by
@@ -12404,6 +12405,8 @@ ecs#:#ecs_cmap_all_in_one_info#:#Create all new courses in one category.
 ecs#:#ecs_cmap_all_in_one_cat#:#Course Category
 ecs#:#ecs_cmap_multiple_atts#:#Multiple Attributes
 ecs#:#ecs_cmap_att_organisation#:#Organisation
+ecs#:#ecs_cmap_att_orgunit#:#Organisational Unit
+ecs#:#ecs_member_auth_type#:#Authentication Mode (Participants)
 ecs#:#ecs_cmap_att_term#:#Term
 ecs#:#ecs_cmap_att_title#:#Title
 ecs#:#ecs_cmap_att_lecturer#:#Lecturer
@@ -12593,6 +12596,8 @@ dcl#:#dcl_supported_filetypes_desc#:#You can set the allowed extensions comma se
 dcl#:#dcl_no_export_data_available#:#No data or fields available for export.
 dcl#:#dcl_no_export_content_available#:#No data available for export.
 dcl#:#dcl_no_export_fields_available#:#No fields activated for export. Mark at least one field as exportable in the <a href="%s">table settings</a>.
+dcl#:#dcl_no_read_access_on_any_standard_view#:#You don't have read access on any standard view of a table.
+dcl#:#dcl_rbac_roles_without_read_access_on_any_standard_view#:#The following rbac roles have read access on the data collection, but no read access on any standard view of a table:
 rbac#:#dcl_edit_content#:#Edit entries
 common#:#obj_bibl#:#Bibliography
 common#:#objs_bibl#:#Bibliographies
@@ -15348,6 +15353,8 @@ chatroom#:#chatroom_auth#:#Authentication
 chatroom#:#chatroom_auth_key#:#Authentication-Key
 chatroom#:#chatroom_auth_secret#:#Authentication-Secret
 chatroom#:#chatroom_auth_btn_txt#:#Generate Keys
+chatroom#:#chatroom_client_name#:#Name
+chatroom#:#chatroom_client_name_info#:#Please enter a name for this ILIAS client. The entered string must be globally unique. Initially this value is set to the client id of the ILIAS client. If changed, the chat server must be restarted.
 chatroom#:#key#:#Key
 chatroom#:#dhparam#:#Diffie-Hellman Parameter
 chatroom#:#ilias_chatserver_connection#:#ILIAS to Server Connection
@@ -15521,7 +15528,7 @@ assessment#:#save_on_navigation#:#Save on Navigation###fau: testNav
 assessment#:#save_on_navigation_confirmation#:#Your changed answers will be automatically saved when you navigate.###fau: testNav
 assessment#:#save_on_navigation_locked_confirmation#:#Your changed answers will be automatically saved and locked when you navigate.###fau: testNav
 assessment#:#save_on_navigation_forced_feedback_hint#:#Before you get feedback on your given answer.###fau: testNav
-assessment#:#save_on_navigation_prevent_confirmation#:#Don't show this message again###fau: testNav
+assessment#:#save_on_navigation_prevent_confirmation#:#Don't show this message again in my current session.
 assessment#:#tst_answer_status_editing#:# (editing)###fau: testNav
 assessment#:#tst_answer_status_answered#:#Answered###fau: testNav
 assessment#:#tst_answer_status_not_answered#:#Not answered###fau: testNav

@@ -1196,7 +1196,7 @@ assessment#:#test_using_template_link#:#Vorlage nicht mehr verwenden
 assessment#:#text_answers_saved#:#Die Punkte der Textfragen wurden gespeichert!###deprecated
 assessment#:#text_correct#:#Korrekter Text
 assessment#:#text_gap#:#Textlücke
-assessment#:#text_maximum_chars_allowed#:#Bitte geben Sie nicht mehr als ein Maximum von %s Zeichen ein. Alle weiteren Zeichen werden am Ende abgeschnitten.
+assessment#:#text_maximum_chars_allowed#:#Bitte geben Sie nicht mehr als ein Maximum von %s Zeichen ein. Eingaben über das Limit hinaus werden nicht abgeschnitten, können aber ggf. in die Bewertung mit eingehen.
 assessment#:#text_rating#:#Methode für Textvergleiche
 assessment#:#text_wrong#:#Fehlerhafter Text
 assessment#:#textsize#:#Textgröße
@@ -11325,7 +11325,7 @@ wiki#:#wiki_activate_rating#:#Bewertung der Seiten erlauben
 wiki#:#wiki_all_pages#:#Alle Seiten
 wiki#:#wiki_article#:#Artikel###deprecated
 wiki#:#wiki_block_page#:#Schreibschutz für Seite
-wiki#:#wiki_change_notification_body_new#:#die folgende Wiki-Seite wurde neu angelegt###deprecated
+wiki#:#wiki_change_notification_body_new#:#die folgende Wiki-Seite wurde neu angelegt
 wiki#:#wiki_change_notification_link#:#URL
 wiki#:#wiki_change_notification_page_body_comment#:#die folgende Wiki-Seite wurde kommentiert###deprecated
 wiki#:#wiki_change_notification_page_body_delete#:#die folgende Wiki-Seite wurde gelöscht###deprecated
@@ -11527,6 +11527,7 @@ content#:#cont_current_term#:#Aktueller Begriff
 assessment#:#tst_setting_offer_hints_label#:#Lösungshinweise
 assessment#:#tst_setting_offer_hints_info#:#Teilnehmer können Lösungshinweise anfordern, um eine Frage zu beantworten. Pro gegebenem Lösungshinweis verringern sich die Punkte für die richtige Antwort.
 assessment#:#tst_question_hints_tab#:#Lösungshinweise
+assessment#:#question_browse_area_info#:#Wählen sie bitte ein Objekt aus dem sie Fragen importieren wollen.
 assessment#:#tst_question_hints_table_header#:#Lösungshinweise zur Frage: %s
 assessment#:#tst_question_hints_table_no_items#:#Keine vorhandenen Lösungshinweise
 assessment#:#tst_question_hints_table_column_hint_order#:#Reihenfolge
@@ -11702,6 +11703,8 @@ dcl#:#dcl_supported_filetypes_desc#:#Sie können hier kommagetrennt Dateiendunge
 dcl#:#dcl_no_export_data_available#:#Keine Daten oder Felder für den Export verfügbar.
 dcl#:#dcl_no_export_content_available#:#Keine Daten für den Export verfügbar.
 dcl#:#dcl_no_export_fields_available#:#Keine Felder für den Export aktiviert. Markieren Sie mindestens ein Feld als "Exportierbar" in den <a href="%s">Tabelleneinstellungen</a>.
+dcl#:#dcl_no_read_access_on_any_standard_view#:#Sie haben auf keine Standard Tabellenansicht Lesezugriff.
+dcl#:#dcl_rbac_roles_without_read_access_on_any_standard_view#:#Die folgenden RBAC Rollen haben Lesezugriff auf die Datensammlung, jedoch auf keine Standard Ansicht der Tabellen:
 common#:#obj_dcl_duplicate#:#Datensammlung kopieren
 survey#:#freetext_answers#:#Freitext-Antworten
 forum#:#frm_at_least_one_moderator#:#Es muss mindestens ein Moderator zugewiesen sein.
@@ -11959,7 +11962,7 @@ dcl#:#dcl_edit_notification_info#:#Sie werden benachrichtigt, sobald Datensätze
 dcl#:#dcl_change_notification_link#:#Zur Datensammlung gehen
 dcl#:#dcl_change_notification_dcl_new_record#:#Der folgende Eintrag wurde erzeugt
 dcl#:#dcl_change_notification_dcl_update_record#:#Der folgende Eintrag wurde aktualisiert
-dcl#:#dcl_change_notification_dcl_delete_record#:#Der folgende Eintrag wurde gelöscht###deprecated
+dcl#:#dcl_change_notification_dcl_delete_record#:#Der folgende Eintrag wurde gelöscht
 dcl#:#dcl_change_why_you_receive_this_email#:#Sie erhalten diese Nachricht weil Sie die Benachrichtigungsfunktion für die oben genannte Datensatzsammlung aktiviert haben.
 dcl#:#dcl_table#:#Tabelle
 dcl#:#dcl_changed_by#:#Letzte Änderung durch
@@ -12422,6 +12425,8 @@ ecs#:#ecs_cmap_all_in_one_info#:#Bitte geben Sie die Kategorie an, in welcher al
 ecs#:#ecs_cmap_all_in_one_cat#:#Kurs-Kategorie
 ecs#:#ecs_cmap_multiple_atts#:#Zuordnung nach Attributen
 ecs#:#ecs_cmap_att_organisation#:#Organisation
+ecs#:#ecs_cmpa_att_orgunit#:#Organisationseinheit
+ecs#:#ecs_member_auth_type#:#Authentifizierungsmodus der Teilnehmer
 ecs#:#ecs_cmap_att_term#:#Semester
 ecs#:#ecs_cmap_att_title#:#Veranstaltungstitel
 ecs#:#ecs_cmap_att_lecturer#:#Lehrperson
@@ -15372,6 +15377,8 @@ chatroom#:#chatroom_auth#:#Authentifikation
 chatroom#:#chatroom_auth_key#:#Authentifikation-Schlüssel
 chatroom#:#chatroom_auth_secret#:#Authentifikation-Geheimnis
 chatroom#:#chatroom_auth_btn_txt#:#Schlüssel generieren
+chatroom#:#chatroom_client_name#:#Name
+chatroom#:#chatroom_client_name_info#:#Geben Sie hier einen global eindeutigen Namen des Mandanten zur Registrierung am Chat-Server ein. Initial wird hier die Mandanten-ID genutzt. Beim Ändern dieses Wertes muss der Chat-Server neu gestartet werden.
 chatroom#:#key#:#Schlüssel
 chatroom#:#dhparam#:#Diffie-Hellman Parameter
 chatroom#:#ilias_chatserver_connection#:#Verbindung ILIAS zum Server
@@ -15545,7 +15552,7 @@ assessment#:#save_on_navigation#:#Navigation mit Speichern
 assessment#:#save_on_navigation_confirmation#:#Ihre geänderten Antworten werden beim Navigieren automatisch gespeichert.
 assessment#:#save_on_navigation_locked_confirmation#:#Ihre geänderten Antworten werden beim Navigieren automatisch gespeichert und festgeschrieben.
 assessment#:#save_on_navigation_forced_feedback_hint#:#Vorher erhalten Sie Feedback zu Ihrer Antwort.
-assessment#:#save_on_navigation_prevent_confirmation#:#Diese Meldung nicht mehr anzeigen.
+assessment#:#save_on_navigation_prevent_confirmation#:#Diese Meldung in meiner aktuellen Sitzung nicht mehr anzeigen.
 assessment#:#tst_answer_status_editing#:#(in Bearbeitung)
 assessment#:#tst_answer_status_answered#:#Beantwortet
 assessment#:#tst_answer_status_not_answered#:#Nicht beantwortet
