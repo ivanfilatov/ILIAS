@@ -6042,8 +6042,8 @@ crs#:#sess_gen_signature#:#Generate Column for Signatures###deprecated
 crs#:#sess_join_info#:#Please click Attend if you want to take part at this session.
 crs#:#sess_limit_info#:#Participants are not presented with the list of all sessions but a limited number of sessions.
 crs#:#sess_limit#:#Limit Number of Sessions Shown
-crs#:#sess_num_next#:#Number of Future Sessions
-crs#:#sess_num_prev#:#Number of Past Sessions
+crs#:#sess_num_next#:#Number of Following Sessions (from tomorrow)
+crs#:#sess_num_prev#:#Number of Past Sessions (until yesterday)
 crs#:#sess_print_attendance_list#:#Print List
 crs#:#sess_signature#:#Signature
 crs#:#subscription_times_not_valid#:#The registration period is not valid.
@@ -13818,6 +13818,7 @@ obj#:#obj_deactivate_multilang_conf#:#Do you really want to deactivate multiling
 obj#:#obj_multilang_deactivated#:#Multilingualism has been deactivated.
 cntr#:#cntr_container_only_on_their_own#:#Categories, courses, groups or folders can only be copied as single objects. Please select one item only.
 cntr#:#objects_duplicated#:#Objects copied
+cntr#:#msg_no_downloadable_objects#:#No downloadable objects found.
 poll#:#poll_max_number_of_answers#:#Maximum Number Of Answers per Participant
 poll#:#poll_vote_error_single#:#Please select 1 answer.
 poll#:#poll_vote_error_multi#:#Please select no more than %s answers.
@@ -15115,7 +15116,7 @@ log#:#log_browser_users#:#Usernames Using Console Log
 log#:#log_component_col_component#:#Component
 log#:#log_component_col_level#:#Log-Level
 log#:#log_component_btn_reset#:#Reset Settings
-forum#:#frm_search#:#Suche
+forum#:#frm_search#:#Search
 mail#:#mail_enable_crs_admin_notification#:#Notify Course Administrators
 mail#:#mail_enable_grp_admin_notification#:#Notify Group Administrators
 mail#:#mail_enable_crs_admin_notification_info#:#In new courses the setting 'Notification About New Members' will be activated by default. It is set in the 'Member'-tab of courses. Course administrators will receive an e-mail when a member joins the course or leaves it or if the minimally required number of participants is not met the course needs to take place.
