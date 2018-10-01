@@ -941,16 +941,6 @@ class ilUserProfile
 	static function isProfileIncomplete($a_user, $a_include_udf = true, $a_personal_data_only = true)
 	{
 		global $ilSetting;
-
-        // CHANGES IN CORE *start*
-		try {
-            if (stripos($a_user->getPersonalPicturePath(), "no_photo")) {
-                return true;
-            }
-        } catch (Error $e) {
-			// do nothing, just skip (occurs when SOAP is called)
-		}
-        // CHANGES IN CORE *end*
 		
 		// standard fields
 		foreach(self::$user_field as $field => $definition)
