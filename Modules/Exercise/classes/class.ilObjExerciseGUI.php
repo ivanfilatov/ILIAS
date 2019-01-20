@@ -444,17 +444,17 @@ class ilObjExerciseGUI extends ilObjectGUI
 
         // CHANGES IN CORE *start*
         // grades tab now here
-        if(in_array($ilUser->getLastname()." ".$ilUser->getFirstname(), $this->object->getPersonalAccessNames()))
-        {
-            $this->tabs_gui->addTab("grades",
-                $lng->txt("exc_submissions_and_grades"),
-                $this->ctrl->getLinkTargetByClass("ilexercisemanagementgui", "memberspersonal"));
-        }
-        elseif ($this->checkPermissionBool("write"))
+        if ($this->checkPermissionBool("write"))
         {
             $this->tabs_gui->addTab("grades",
                 $lng->txt("exc_submissions_and_grades"),
                 $this->ctrl->getLinkTargetByClass("ilexercisemanagementgui", "members"));
+        }
+        elseif(in_array($ilUser->getLastname()." ".$ilUser->getFirstname(), $this->object->getPersonalAccessNames()))
+        {
+            $this->tabs_gui->addTab("grades",
+                $lng->txt("exc_submissions_and_grades"),
+                $this->ctrl->getLinkTargetByClass("ilexercisemanagementgui", "memberspersonal"));
         }
         // CHANGES IN CORE *end*
 

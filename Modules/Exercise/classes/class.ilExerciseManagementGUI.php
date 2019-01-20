@@ -204,18 +204,18 @@ class ilExerciseManagementGUI
 
         // CHANGES IN CORE *start*
         if(in_array($ilUser->getLastname()." ".$ilUser->getFirstname(), $this->exercise->getPersonalAccessNames())) {
-            $ilTabs->addSubTab("personal", $lng->txt("exc_assignment_view"),
+            $ilTabs->addSubTab("personal", 'Personal',
                 $ilCtrl->getLinkTarget($this, "memberspersonal"));
-        } else {
-            $ilTabs->addSubTab("assignment", $lng->txt("exc_assignment_view"),
-                $ilCtrl->getLinkTarget($this, "members"));
-            $ilTabs->addSubTab("participant", $lng->txt("exc_participant_view"),
-                $ilCtrl->getLinkTarget($this, "showParticipant"));
-            $ilTabs->addSubTab("grades", $lng->txt("exc_grades_overview"),
-                $ilCtrl->getLinkTarget($this, "showGradesOverview"));
-            $ilTabs->activateSubTab($a_activate);
         }
         // CHANGES IN CORE *end*
+
+		$ilTabs->addSubTab("assignment", $lng->txt("exc_assignment_view"),
+			$ilCtrl->getLinkTarget($this, "members"));
+		$ilTabs->addSubTab("participant", $lng->txt("exc_participant_view"),
+			$ilCtrl->getLinkTarget($this, "showParticipant"));
+		$ilTabs->addSubTab("grades", $lng->txt("exc_grades_overview"),
+			$ilCtrl->getLinkTarget($this, "showGradesOverview"));
+		$ilTabs->activateSubTab($a_activate);
 		
 		$ilCtrl->setParameter($this, "ass_id", $ass_id);
 		$ilCtrl->setParameter($this, "part_id", $part_id);		
@@ -644,15 +644,18 @@ class ilExerciseManagementGUI
 	 */
 	function selectAssignmentObject()
 	{
-        global $ilUser; // CHANGES IN CORE
+        global $ilUser, $ilAccess; // CHANGES IN CORE
 
 		$_GET["ass_id"] = ilUtil::stripSlashes($_POST["ass_id"]);
 
         // CHANGES IN CORE *start*
-        if(in_array($ilUser->getLastname()." ".$ilUser->getFirstname(), $this->exercise->getPersonalAccessNames())) {
-            $this->memberspersonalObject();
-        } else {
+        if($ilAccess->checkAccess("write", "", $this->exercise->ref_id))
+        {
             $this->membersObject();
+        }
+        elseif(in_array($ilUser->getLastname()." ".$ilUser->getFirstname(), $this->exercise->getPersonalAccessNames()))
+        {
+            $this->memberspersonalObject();
         }
         // CHANGES IN CORE *end*
 	}
