@@ -752,8 +752,11 @@ class ilObjMediaObject extends ilObject
 					$xml .= "<MediaItem Purpose=\"".$item->getPurpose()."\">";
 
 					// Location
+					$loc = ($item->getLocationType() == "Reference")
+						? ilUtil::secureUrl($item->getLocation())
+						: $item->getLocation();
 					$xml.= "<Location Type=\"".$item->getLocationType()."\">".
-						$this->handleAmps($item->getLocation())."</Location>";
+						$this->handleAmps($loc)."</Location>";
 
 					// Format
 					$xml.= "<Format>".$item->getFormat()."</Format>";
@@ -1948,6 +1951,12 @@ class ilObjMediaObject extends ilObject
 	 */
 	function uploadVideoPreviewPic($a_prevpic)
 	{
+		// remove old one
+		if ($this->getVideoPreviewPic(true) != "")
+		{
+			$this->removeAdditionalFile($this->getVideoPreviewPic(true));
+		}
+
 		$pi = pathinfo($a_prevpic["name"]);
 		$ext = $pi["extension"];
 		if (in_array($ext, array("jpg", "jpeg", "png")))
