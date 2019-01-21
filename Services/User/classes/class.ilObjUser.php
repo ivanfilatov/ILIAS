@@ -5814,8 +5814,8 @@ class ilObjUser extends ilObject
         $uidNumber = (int)$data['usr_id'][1] + 100000;
 
         $ICEFINFO_SID = 'S-1-5-21-2109522240-231498690-3242073413';
-        $ldap_pass = '{MD5}' . base64_encode(md5(iconv("cp1251", "UTF-8", $this->passwd), true));
-        $sambaNTPass = strtoupper(hash('md4', iconv("cp1251", "UTF-16LE", $this->passwd)));
+        $ldap_pass = '{MD5}' . base64_encode(md5(iconv("cp1251", "UTF-8", $_POST['passwd']), true));
+        $sambaNTPass = strtoupper(hash('md4', iconv("cp1251", "UTF-16LE", $_POST['passwd'])));
         $gidNumber = ($uid == "sysadmin") ? '512' : '513'; // Domain Admins for "sysadmin" / Domain Users
 
         $defaults = array(
@@ -5944,8 +5944,8 @@ class ilObjUser extends ilObject
         //passwords (in the end because when changed, they will appear here)
         if (strlen($_POST['passwd'])) # i promise not to use post array any more...
         {
-            $ldap_pass = '{MD5}' . base64_encode(md5(iconv("cp1251", "UTF-8", $this->passwd), true));
-            $sambaNTPass = strtoupper(hash('md4', iconv("cp1251", "UTF-16LE", $this->passwd)));
+            $ldap_pass = '{MD5}' . base64_encode(md5(iconv("cp1251", "UTF-8", $_POST['passwd']), true));
+            $sambaNTPass = strtoupper(hash('md4', iconv("cp1251", "UTF-16LE", $_POST['passwd'])));
             $defaults['userPassword'] = $ldap_pass;
             $defaults['sambaNTPassword'] = $sambaNTPass;
         } else {
