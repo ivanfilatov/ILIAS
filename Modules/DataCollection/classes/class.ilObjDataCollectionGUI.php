@@ -52,8 +52,8 @@ class ilObjDataCollectionGUI extends ilObject2GUI {
 
 		$lng->loadLanguageModule("dcl");
 
-		if (isset($_REQUEST['table_id'])) {
-			$this->table_id = $_REQUEST['table_id'];
+		if (isset($_GET['table_id'])) {
+			$this->table_id = $_GET['table_id'];
 		} elseif (isset($_GET['tableview_id'])) {
 			$this->table_id = ilDclTableView::find($_GET['tableview_id'])->getTableId();
 		} elseif ($a_id > 0) {
@@ -231,7 +231,7 @@ class ilObjDataCollectionGUI extends ilObject2GUI {
 				$recordview_gui = new ilDclDetailedViewGUI($this);
 				$this->ctrl->forwardCommand($recordview_gui);
 				$ilTabs->clearTargets();
-				$ilTabs->setBackTarget($this->lng->txt("back"), $ilCtrl->getLinkTargetByClass("ilObjDataCollectionGUI", ""));
+				$ilTabs->setBackTarget($this->lng->txt("back"), $ilCtrl->getLinkTargetByClass(ilDclRecordListGUI::class, ilDclRecordListGUI::CMD_LIST_RECORDS));
 				break;
 
 			case 'ilnotegui':
@@ -251,7 +251,7 @@ class ilObjDataCollectionGUI extends ilObject2GUI {
 
 				require_once 'Modules/DataCollection/classes/Content/class.ilDclContentExporter.php';
 				$exporter = new ilDclContentExporter($this->object->getRefId());
-				$exp_gui->addFormat("xls", $this->lng->txt('dlc_xls_async_export'), $exporter, 'exportAsync');
+				$exp_gui->addFormat("xlsx", $this->lng->txt('dlc_xls_async_export'), $exporter, 'exportAsync');
 
 				$this->ctrl->forwardCommand($exp_gui);
 				break;

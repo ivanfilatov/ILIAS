@@ -704,6 +704,17 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
 		
 		parent::__construct($a_id, $a_call_by_reference);
 	}
+	
+	/**
+	 * returns the object title prepared to be used as a filename
+	 *
+	 * @return string
+	 */
+	public function getTitleFilenameCompliant()
+	{
+		require_once 'Services/Utilities/classes/class.ilUtil.php';
+		return ilUtil::getASCIIFilename($this->getTitle());
+	}
 
 	/**
 	 * @return int
@@ -987,6 +998,10 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
 		{
 			$ilias->raiseError("Creation of test import directory failed.",$ilias->error_obj->FATAL);
 		}
+
+		// assert that this is empty and does not contain old data
+		ilUtil::delDir($tst_dir, true);
+
 		return $tst_dir;
 	}
 
@@ -3765,6 +3780,12 @@ function getAnswerFeedbackPoints()
 	{
 		if ($this->getTitleOutput() == 2)
 		{
+			if( $this->getQuestionSetType() == self::QUESTION_SET_TYPE_DYNAMIC )
+			{
+				// avoid legacy setting combination: ctm without question titles
+				return $title;
+			}
+			else
 			if (isset($nr))
 			{
 				return $this->lng->txt("ass_question"). ' ' . $nr;
@@ -4291,6 +4312,7 @@ function getAnswerFeedbackPoints()
 		$found["test"]["total_requested_hints"] = $results['hint_count'];
 		$found["test"]["total_hint_points"] = $results['hint_points'];
 		$found["test"]["result_pass"] = $results['pass'];
+		$found['test']['result_tstamp'] = $results['tstamp'];
 		$found['test']['obligations_answered'] = $results['obligations_answered'];
 		
 		if( (!$total_reached_points) or (!$total_max_points) )
@@ -8641,6 +8663,18 @@ function getAnswerFeedbackPoints()
 		}
 		
 		return $questions;
+	}
+
+	public function checkQuestionParent($questionId)
+	{
+		global $DIC; /* @var ILIAS\DI\Container $DIC */
+		
+		$row = $DIC->database()->fetchAssoc($DIC->database()->queryF(
+			"SELECT COUNT(question_id) cnt FROM qpl_questions WHERE question_id = %s AND obj_fi = %s",
+			array('integer', 'integer'), array($questionId, $this->getId())
+		));
+		
+		return (bool)$row['cnt'];
 	}
 
 	/**

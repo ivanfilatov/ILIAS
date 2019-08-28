@@ -409,22 +409,15 @@ class ilObjTestGUI extends ilObjectGUI
 				$incompleteQuestionPurger->setOwnerId($ilUser->getId());
 				$incompleteQuestionPurger->purge();
 				
-				$qid = $_REQUEST['q_id'];
-
-				if(!$qid || $qid == 'Array')
+				try
 				{
-					$questions = $this->object->getQuestionTitlesAndIndexes();
-					if(!is_array($questions))
-						$questions = array();
-
-					$keys = array_keys($questions);
-					$qid  = $keys[0];
-
-					$_REQUEST['q_id'] = $qid;
-					$_GET['q_id']     = $qid;
-					$_POST['q_id']    = $qid;
+					$qid = $this->fetchAuthoringQuestionIdParameter();
 				}
-
+				catch(ilTestException $e)
+				{
+					$qid = 0;
+				}
+				
 				$this->prepareOutput();
 				if(!in_array($cmd, array('addQuestion', 'browseForQuestions')))
 				{
@@ -514,7 +507,7 @@ class ilObjTestGUI extends ilObjectGUI
 				require_once 'Modules/TestQuestionPool/classes/class.ilAssQuestionPreviewGUI.php';
 				$gui = new ilAssQuestionPreviewGUI($this->ctrl, $this->tabs_gui, $this->tpl, $this->lng, $ilDB, $ilUser);
 
-				$gui->initQuestion((int)$_GET['q_id'], $this->object->getId());
+				$gui->initQuestion($this->fetchAuthoringQuestionIdParameter(), $this->object->getId());
 				$gui->initPreviewSettings($this->object->getRefId());
 				$gui->initPreviewSession($ilUser->getId(), (int)$_GET['q_id']);
 				$gui->initHintTracking();
@@ -525,6 +518,9 @@ class ilObjTestGUI extends ilObjectGUI
 				break;
 
 			case 'ilassquestionpagegui':
+
+				$_GET['q_id'] = $this->fetchAuthoringQuestionIdParameter();
+
 				require_once "./Modules/TestQuestionPool/classes/class.ilAssQuestionPageGUI.php";
 				//echo $_REQUEST['prev_qid'];
 				if($_REQUEST['prev_qid'])
@@ -594,7 +590,7 @@ class ilObjTestGUI extends ilObjectGUI
 
 				// set context tabs
 				require_once 'Modules/TestQuestionPool/classes/class.assQuestionGUI.php';
-				$questionGUI = assQuestionGUI::_getQuestionGUI('', $_GET['q_id']);
+				$questionGUI = assQuestionGUI::_getQuestionGUI('', $this->fetchAuthoringQuestionIdParameter());
 				$questionGUI->object->setObjId($this->object->getId());
 				$questionGUI->setQuestionTabs();
 
@@ -621,13 +617,20 @@ class ilObjTestGUI extends ilObjectGUI
 
 				// set context tabs
 				require_once 'Modules/TestQuestionPool/classes/class.assQuestionGUI.php';
-				$questionGUI =& assQuestionGUI::_getQuestionGUI($q_type, $_GET['q_id']);
+				$questionGUI =& assQuestionGUI::_getQuestionGUI($q_type, $this->fetchAuthoringQuestionIdParameter());
 				$questionGUI->object->setObjId($this->object->getId());
 				$questionGUI->setQuestionTabs();
 
 				// forward to ilAssQuestionHintsGUI
 				require_once 'Modules/TestQuestionPool/classes/class.ilAssQuestionHintsGUI.php';
 				$gui = new ilAssQuestionHintsGUI($questionGUI);
+				
+				global $DIC; /* @var ILIAS\DI\Container $DIC */
+				
+				$gui->setEditingEnabled(
+					$DIC->access()->checkAccess('write', '', $this->object->getRefId())
+				);
+				
 				$ilCtrl->forwardCommand($gui);
 
 				break;
@@ -641,7 +644,7 @@ class ilObjTestGUI extends ilObjectGUI
 
 				// set context tabs
 				require_once 'Modules/TestQuestionPool/classes/class.assQuestionGUI.php';
-				$questionGUI = assQuestionGUI::_getQuestionGUI('', $_GET['q_id']);
+				$questionGUI = assQuestionGUI::_getQuestionGUI('', $this->fetchAuthoringQuestionIdParameter());
 				$questionGUI->object->setObjId($this->object->getId());
 				$questionGUI->setQuestionTabs();
 
@@ -697,7 +700,7 @@ class ilObjTestGUI extends ilObjectGUI
 
 				$this->ctrl->setReturn($this, "questions");
 				require_once "./Modules/TestQuestionPool/classes/class.assQuestionGUI.php";
-				$q_gui =& assQuestionGUI::_getQuestionGUI($_GET['sel_question_types'], $_GET["q_id"]);
+				$q_gui =& assQuestionGUI::_getQuestionGUI($_GET['sel_question_types'], $this->fetchAuthoringQuestionIdParameter());
 				$q_gui->setEditContext(assQuestionGUI::EDIT_CONTEXT_AUTHORING);
 				$q_gui->object->setObjId($this->object->getId());
 				if(!$_GET['sel_question_types'])
@@ -750,7 +753,36 @@ class ilObjTestGUI extends ilObjectGUI
 		global $DIC; /* @var ILIAS\DI\Container $DIC */
 		$DIC->ctrl()->redirectByClass('ilTestExportGUI');
 	}
-
+	
+	/**
+	 * @return mixed
+	 */
+	protected function fetchAuthoringQuestionIdParameter()
+	{
+		$qid = $_REQUEST['q_id'];
+		
+		if (!$qid || $qid == 'Array')
+		{
+			$questions = $this->object->getQuestionTitlesAndIndexes();
+			if (!is_array($questions))
+				$questions = array();
+			
+			$keys = array_keys($questions);
+			$qid = $keys[0];
+			
+			$_REQUEST['q_id'] = $qid;
+			$_GET['q_id'] = $qid;
+			$_POST['q_id'] = $qid;
+		}
+		
+		if( $this->object->checkQuestionParent($qid) )
+		{
+			return $qid;
+		}
+		
+		throw new ilTestException('question id does not relate to parent object!');
+	}
+	
 	private function questionsTabGatewayObject()
 	{
 		switch( $this->object->getQuestionSetType() )
@@ -1116,18 +1148,6 @@ class ilObjTestGUI extends ilObjectGUI
 		$result = $qtiParser->startParsing();
 		$founditems =& $qtiParser->getFoundItems();
 		
-		if (count($founditems) == 0)
-		{
-			// nothing found
-
-			// delete import directory
-			ilUtil::delDir($basedir);
-
-			ilUtil::sendInfo($this->lng->txt("tst_import_no_items"));
-			$this->createObject();
-			return;
-		}
-		
 		$complete = 0;
 		$incomplete = 0;
 		foreach ($founditems as $item)
@@ -1142,7 +1162,7 @@ class ilObjTestGUI extends ilObjectGUI
 			}
 		}
 		
-		if ($complete == 0)
+		if( count($founditems) && $complete == 0 )
 		{
 			// delete import directory
 			ilUtil::delDir($basedir);
@@ -1157,7 +1177,7 @@ class ilObjTestGUI extends ilObjectGUI
 		$_SESSION["tst_import_qti_file"] = $qti_file;
 		$_SESSION["tst_import_subdir"] = $subdir;
 		
-		if( $qtiParser->getQuestionSetType() == ilObjTest::QUESTION_SET_TYPE_RANDOM )
+		if( $qtiParser->getQuestionSetType() != ilObjTest::QUESTION_SET_TYPE_FIXED )
 		{
 			$this->importVerifiedFileObject();
 			return;
@@ -1942,26 +1962,24 @@ class ilObjTestGUI extends ilObjectGUI
 	}
 
 	/**
-	* Called when a selection of questions should be removed from the test
-	*
-	* Called when a selection of questions should be removed from the test
-	*
-	* @access	public
-	*/
-	function removeQuestionsObject()
+	 * Called when a selection of questions should be removed from the test
+	 */
+	public function removeQuestionsObject()
 	{
 		$this->getQuestionsSubTabs();
 		$checked_questions = $_REQUEST["q_id"];
+
 		if (!is_array($checked_questions) && $checked_questions) {
-		    $checked_questions = array($checked_questions);
+			$checked_questions = array($checked_questions);
 		}
-		if (count($checked_questions) > 0) 
-		{			
+
+		if (!is_array($checked_questions)) {
+			$checked_questions = [];
+		}
+
+		if (count($checked_questions) > 0) {
 			$this->removeQuestionsForm($checked_questions);
-			return;
-		} 
-		elseif (count($checked_questions) == 0) 
-		{
+		} elseif (0 === count($checked_questions)) {
 			ilUtil::sendFailure($this->lng->txt("tst_no_question_selected_for_removal"), true);
 			$this->ctrl->redirect($this, "questions");
 		}
@@ -1994,7 +2012,7 @@ class ilObjTestGUI extends ilObjectGUI
 		// get all questions to move
 		$move_questions = $_SESSION['tst_qst_move_' . $this->object->getTestId()];
 
-		if (count($_POST['q_id']) == 0)
+		if (!is_array($_POST['q_id']) || 0 === count($_POST['q_id']))
 		{
 			ilUtil::sendFailure($this->lng->txt("no_target_selected_for_move"), true);
 			$this->ctrl->redirect($this, 'questions');
@@ -2018,7 +2036,7 @@ class ilObjTestGUI extends ilObjectGUI
 	{
 		// get all questions to move
 		$move_questions = $_SESSION['tst_qst_move_' . $this->object->getTestId()];
-		if (count($_POST['q_id']) == 0)
+		if (!is_array($_POST['q_id']) || 0 === count($_POST['q_id']))
 		{
 			ilUtil::sendFailure($this->lng->txt("no_target_selected_for_move"), true);
 			$this->ctrl->redirect($this, 'questions');
@@ -2077,6 +2095,10 @@ class ilObjTestGUI extends ilObjectGUI
 	public function addQuestionObject()
 	{
 		global $lng, $ilCtrl, $tpl;
+		global $DIC; /* @var \ILIAS\DI\Container $DIC */
+		$ilHelp = $DIC['ilHelp']; /* @var ilHelpGUI $ilHelp */
+
+		$subScreenId = array('createQuestion');
 
 		include_once "Services/Form/classes/class.ilPropertyFormGUI.php";
 
@@ -2121,6 +2143,8 @@ class ilObjTestGUI extends ilObjectGUI
 		// content editing mode
 		if( ilObjAssessmentFolder::isAdditionalQuestionContentEditingModePageObjectEnabled() )
 		{
+			$subScreenId[] = 'editMode';
+
 			$ri = new ilRadioGroupInputGUI($lng->txt("tst_add_quest_cont_edit_mode"), "add_quest_cont_edit_mode");
 
 			$ri->addOption(new ilRadioOption(
@@ -2146,6 +2170,8 @@ class ilObjTestGUI extends ilObjectGUI
 
 		if($this->object->getPoolUsage())
 		{
+			$subScreenId[] = 'poolSelect';
+			
 			// use pool
 			$usage = new ilRadioGroupInputGUI($this->lng->txt("assessment_pool_selection"), "usage");
 			$usage->setRequired(true);
@@ -2178,6 +2204,9 @@ class ilObjTestGUI extends ilObjectGUI
 		$form->addCommandButton("executeCreateQuestion", $lng->txt("create"));
 		$form->addCommandButton("questions", $lng->txt("cancel"));
 
+		$ilHelp->setScreenId('assQuestions');
+		$ilHelp->setSubScreenId(implode('_', $subScreenId));
+		
 		return $tpl->setContent($form->getHTML());
 	}
 	
@@ -2569,6 +2598,7 @@ class ilObjTestGUI extends ilObjectGUI
 			}
 
 			$pool = new ilSelectInputGUI($this->lng->txt("select_questionpool"), "qpl");
+			$pool->setInfo($this->lng->txt('select_question_pool_info'));
 			$pool->setOptions($options);
 			$form->addItem($pool);
 		}
@@ -3253,7 +3283,7 @@ class ilObjTestGUI extends ilObjectGUI
 		if( $isPdfDeliveryRequest )
 		{
 			require_once 'class.ilTestPDFGenerator.php';
-			ilTestPDFGenerator::generatePDF($template->get(), ilTestPDFGenerator::PDF_OUTPUT_DOWNLOAD, $this->object->getTitle());
+			ilTestPDFGenerator::generatePDF($template->get(), ilTestPDFGenerator::PDF_OUTPUT_DOWNLOAD, $this->object->getTitleFilenameCompliant());
 		}
 		else
 		{
@@ -3332,7 +3362,7 @@ class ilObjTestGUI extends ilObjectGUI
 		if($isPdfDeliveryRequest)
 		{
 			require_once 'class.ilTestPDFGenerator.php';
-			ilTestPDFGenerator::generatePDF($template->get(), ilTestPDFGenerator::PDF_OUTPUT_DOWNLOAD, $this->object->getTitle());
+			ilTestPDFGenerator::generatePDF($template->get(), ilTestPDFGenerator::PDF_OUTPUT_DOWNLOAD, $this->object->getTitleFilenameCompliant());
 		}
 		else
 		{
@@ -3448,7 +3478,7 @@ class ilObjTestGUI extends ilObjectGUI
 	 */
 	public function applyDefaultsObject($confirmed = false)
 	{
-		if( count($_POST["chb_defaults"]) != 1 )
+		if( !is_array($_POST["chb_defaults"]) || 1 !== count($_POST["chb_defaults"]))
 		{
 			ilUtil::sendInfo(
 				$this->lng->txt("tst_defaults_apply_select_one")
@@ -3776,7 +3806,7 @@ class ilObjTestGUI extends ilObjectGUI
 		$this->ctrl->forwardCommand($info);
 	}
 	
-	protected function renoveImportFailsObject()
+	protected function removeImportFailsObject()
 	{
 		require_once 'Modules/TestQuestionPool/classes/questions/class.ilAssQuestionSkillAssignmentImportFails.php';
 		$qsaImportFails = new ilAssQuestionSkillAssignmentImportFails($this->object->getId());
@@ -4422,6 +4452,14 @@ class ilObjTestGUI extends ilObjectGUI
 				$this->tabs_gui->removeTab($tabId);
 			}
 		}
+	}
+	
+	public static function accessViolationRedirect()
+	{
+		global $DIC; /* @var ILIAS\DI\Container $DIC */
+		
+		ilUtil::sendInfo($DIC->language()->txt("no_permission"), true);
+		$DIC->ctrl()->redirectByClass('ilObjTestGUI', "infoScreen");
 	}
 	
 	/**

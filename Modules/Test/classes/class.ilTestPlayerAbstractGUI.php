@@ -102,6 +102,16 @@ abstract class ilTestPlayerAbstractGUI extends ilTestServiceGUI
 		}
 	}
 	
+	protected function checkTestSessionUser(ilTestSession $testSession)
+	{
+		global $DIC; /* @var ILIAS\DI\Container $DIC */
+		
+		if( $testSession->getUserId() != $DIC->user()->getId() )
+		{
+			throw new ilTestException('active id given does not relate to current user!');
+		}
+	}
+	
 	protected function ensureExistingTestSession(ilTestSession $testSession)
 	{
 		if( $testSession->getActiveId() )
@@ -176,7 +186,8 @@ abstract class ilTestPlayerAbstractGUI extends ilTestServiceGUI
 	public function removeIntermediateSolution()
 	{
 		$questionId = $this->getCurrentQuestionId();
-		return $this->getQuestionInstance($questionId)->removeIntermediateSolution(
+		
+		$this->getQuestionInstance($questionId)->removeIntermediateSolution(
 			$this->testSession->getActiveId(), $this->testSession->getPass()
 		);
 	}
@@ -1591,7 +1602,7 @@ abstract class ilTestPlayerAbstractGUI extends ilTestServiceGUI
 		if( $fullpage )
 		{
 			include_once "./Modules/Test/classes/tables/class.ilListOfQuestionsTableGUI.php";
-			$table_gui = new ilListOfQuestionsTableGUI($this, 'backFromSummary');
+			$table_gui = new ilListOfQuestionsTableGUI($this, 'showQuestion');
 			
 			$table_gui->setShowPointsEnabled( !$this->object->getTitleOutput() );
 			$table_gui->setShowMarkerEnabled( $this->object->getShowMarker() );
