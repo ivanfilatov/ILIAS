@@ -585,7 +585,7 @@ class ilUserProfile
                             {
                                 $ti->setInfo("'Firstname[space]Patronymic' in russian, e.g. 'Иван Иванович'");
                             }
-							$ti->setValidationRegexp('/^[а-яА-Я\-]{1,}(\ [а-яА-Я\-]{1,})?(\ [а-яА-Я\-]{1,})?$/');
+							$ti->setValidationRegexp('/^[а-яА-Я\-]{1,}(\ [а-яА-Я\-]{1,})?(\ [а-яА-Я\-]{1,})?$/u');
                         }
                         if($f == "lastname" && self::$mode == self::MODE_REGISTRATION)
                         {
@@ -597,7 +597,7 @@ class ilUserProfile
                             {
                                 $ti->setInfo("'Lastname' in russian, e.g. 'Иванов'");
                             }
-							$ti->setValidationRegexp('/^[а-яА-Я\-]{1,}$/');
+							$ti->setValidationRegexp('/^[а-яА-Я\-]{1,}$/u');
                         }
                         // CHANGES IN CORE *end*
 
