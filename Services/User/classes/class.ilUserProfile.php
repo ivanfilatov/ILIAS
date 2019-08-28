@@ -492,6 +492,7 @@ class ilUserProfile
                                 {
                                     $custom_field->setInfo("English last name and first name, exactly as in foreign passport, e.g. 'Ivanov Ivan'");
                                 }
+								$custom_field->setValidationRegexp('/^[a-zA-Z\-]{1,}(\ [a-zA-Z\-]{1,})?(\ [a-zA-Z\-]{1,})?$/');
                             }
                             // CHANGES IN CORE *end*
 						}
@@ -584,6 +585,7 @@ class ilUserProfile
                             {
                                 $ti->setInfo("'Firstname[space]Patronymic' in russian, e.g. 'Иван Иванович'");
                             }
+							$ti->setValidationRegexp('/^[а-яА-Я\-]{1,}(\ [а-яА-Я\-]{1,})?(\ [а-яА-Я\-]{1,})?$/');
                         }
                         if($f == "lastname" && self::$mode == self::MODE_REGISTRATION)
                         {
@@ -595,6 +597,7 @@ class ilUserProfile
                             {
                                 $ti->setInfo("'Lastname' in russian, e.g. 'Иванов'");
                             }
+							$ti->setValidationRegexp('/^[а-яА-Я\-]{1,}$/');
                         }
                         // CHANGES IN CORE *end*
 
@@ -876,7 +879,6 @@ class ilUserProfile
                 // CHANGES IN CORE *start*
                 if($custom_field->getPostVar() == "udf_1"); // english name
                 {
-
                     if($lng->lang_key == "ru")
                     {
                         $custom_field->setInfo("Английское написание фамилии и имени, как в загран. паспорте, напр. 'Ivanov Ivan'");
@@ -885,6 +887,7 @@ class ilUserProfile
                     {
                         $custom_field->setInfo("English last name and first name, exactly as in foreign passport, e.g. 'Ivanov Ivan'");
                     }
+					$ti->setValidationRegexp('/^[a-zA-Z\-]{1,}(\ [a-zA-Z\-]{1,})?(\ [a-zA-Z\-]{1,})?$/');
                 }
                 // CHANGES IN CORE *end*
 

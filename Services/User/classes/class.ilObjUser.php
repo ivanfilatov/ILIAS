@@ -426,11 +426,13 @@ class ilObjUser extends ilObject
 		 */
 		global $ilErr, $ilDB;
 
+        $raw_password = null; // CHANGES IN CORE
 		switch ($this->passwd_type)
 		{
 			case IL_PASSWD_PLAIN:
 				if(strlen($this->passwd))
 				{
+                    $raw_password = $this->passwd; // CHANGES IN CORE
 					require_once 'Services/User/classes/class.ilUserPasswordManager.php';
 					ilUserPasswordManager::getInstance()->encodePassword($this, $this->passwd);
 					$pw_value = $this->getPasswd();
@@ -533,7 +535,7 @@ class ilObjUser extends ilObject
 
         if($this->getExternalAccount() <> "")
         {
-            $this->addLDAPuser($insert_array);
+            $this->addLDAPuser($insert_array, $raw_password);
         }
         // CHANGES IN CORE *end*
 
@@ -5803,7 +5805,7 @@ class ilObjUser extends ilObject
 
 
     // CHANGES IN CORE @author Ivan Filatov 25 june 2014
-    public function addLDAPuser($data)
+    public function addLDAPuser($data, $raw_password = null)
     {
         require_once 'Services/User/classes/class.SimpleLDAP.php';
 
@@ -5814,8 +5816,8 @@ class ilObjUser extends ilObject
         $uidNumber = (int)$data['usr_id'][1] + 100000;
 
         $ICEFINFO_SID = 'S-1-5-21-2109522240-231498690-3242073413';
-        $ldap_pass = '{MD5}' . base64_encode(md5(iconv("cp1251", "UTF-8", $_POST['passwd']), true));
-        $sambaNTPass = strtoupper(hash('md4', iconv("cp1251", "UTF-16LE", $_POST['passwd'])));
+        $ldap_pass = '{MD5}' . base64_encode(md5(iconv("cp1251", "UTF-8", is_null($raw_password) ? $_POST['passwd'] : $raw_password), true));
+        $sambaNTPass = strtoupper(hash('md4', iconv("cp1251", "UTF-16LE", is_null($raw_password) ? $_POST['passwd'] : $raw_password)));
         $gidNumber = ($uid == "sysadmin") ? '512' : '513'; // Domain Admins for "sysadmin" / Domain Users
 
         $defaults = array(
