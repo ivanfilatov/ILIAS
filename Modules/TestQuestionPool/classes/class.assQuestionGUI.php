@@ -1055,7 +1055,7 @@ abstract class assQuestionGUI
 
 		// questiontext
 		$question = new ilTextAreaInputGUI($this->lng->txt("question"), "question");
-		$question->setValue($this->object->prepareTextareaOutput($this->object->getQuestion()));
+		$question->setValue($this->object->getQuestion());
 		$question->setRequired(TRUE);
 		$question->setRows(10);
 		$question->setCols(80);
@@ -1075,7 +1075,8 @@ abstract class assQuestionGUI
 		}
 		else
 		{
-			$question->setRteTags(self::getSelfAssessmentTags());
+			require_once 'Modules/TestQuestionPool/classes/questions/class.ilAssSelfAssessmentQuestionFormatter.php';
+			$question->setRteTags(ilAssSelfAssessmentQuestionFormatter::getSelfAssessmentTags());
 			$question->setUseTagsForRteOnly(false);
 		}
 		$form->addItem($question);
@@ -1159,30 +1160,6 @@ abstract class assQuestionGUI
 			}
 		}
 	}
-
-	/**
-	 * Get tags allowed in question tags in self assessment mode
-	 * @return array array of tags
-	 */
-	function getSelfAssessmentTags()
-	{
-		// set tags we allow in self assessment mode
-		$st = ilUtil::getSecureTags();
-		
-		// we allow these tags, since they are typically used in the Tiny Assessment editor
-		// and should not be deleted, if questions are copied from pools to learning modules
-		$not_supported = array("img", "p");
-		$tags = array();
-		foreach ($st as $s)
-		{
-			if (!in_array($s, $not_supported))
-			{
-				$tags[] = $s;
-			}
-		}
-
-		return $tags;
-	}
 	
 	/**
 	 * fetches solutions from database and prefers intermediate solutions,
@@ -1190,7 +1167,7 @@ abstract class assQuestionGUI
 	 * 
 	 * @return bool|null
 	 */
-	private function isLastSolutionSubmitAuthorized($active_id, $pass)
+	protected function isLastSolutionSubmitAuthorized($active_id, $pass)
 	{
 		$userSolution = $this->object->getUserSolutionPreferingIntermediate($active_id, $pass);
 		
@@ -2031,6 +2008,14 @@ abstract class assQuestionGUI
 		$show_question_text = TRUE
 	);
 	
+	protected function hasCorrectSolution($activeId, $passIndex)
+	{
+		$reachedPoints = $this->object->getAdjustedReachedPoints($activeId, $passIndex, true);
+		$maximumPoints = $this->object->getMaximumPoints();
+		
+		return $reachedPoints == $maximumPoints;
+	}
+	
 	public function isAutosaveable()
 	{
 		return $this->object->isAutosaveable();
@@ -2099,7 +2084,7 @@ abstract class assQuestionGUI
 		return $formAction;
 	}
 	
-	protected function magicAfterTestOutput()
+	public function magicAfterTestOutput()
 	{
 		return;
 	}

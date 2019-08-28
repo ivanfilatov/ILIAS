@@ -607,7 +607,15 @@ class assImagemapQuestionGUI extends assQuestionGUI implements ilGuiQuestionScor
 
 		$questionoutput = $template->get();
 		$feedback = ($show_feedback && !$this->isTestPresentationContext()) ? $this->getAnswerFeedbackOutput($active_id, $pass) : "";
-		if (strlen($feedback)) $solutiontemplate->setVariable("FEEDBACK", $feedback);
+		if (strlen($feedback))
+		{
+			$cssClass = ( $this->hasCorrectSolution($active_id, $pass) ?
+				ilAssQuestionFeedback::CSS_CLASS_FEEDBACK_CORRECT : ilAssQuestionFeedback::CSS_CLASS_FEEDBACK_WRONG
+			);
+			
+			$solutiontemplate->setVariable("ILC_FB_CSS_CLASS", $cssClass);
+			$solutiontemplate->setVariable("FEEDBACK", $this->object->prepareTextareaOutput( $feedback, true ));
+		}
 		$solutiontemplate->setVariable("SOLUTION_OUTPUT", $questionoutput);
 
 		$solutionoutput = $solutiontemplate->get(); 
@@ -926,6 +934,46 @@ class assImagemapQuestionGUI extends assQuestionGUI implements ilGuiQuestionScor
 	{
 		return array();
 	}
+	
+	protected function renderAggregateView($answeringFequencies)
+	{
+		$tpl = new ilTemplate('tpl.il_as_aggregated_answers_table.html', true, true, "Modules/TestQuestionPool");
+		
+		$tpl->setCurrentBlock('headercell');
+		$tpl->setVariable('HEADER', $this->lng->txt('tst_answer_aggr_answer_header'));
+		$tpl->parseCurrentBlock();
+		
+		$tpl->setCurrentBlock('headercell');
+		$tpl->setVariable('HEADER', $this->lng->txt('tst_answer_aggr_frequency_header'));
+		$tpl->parseCurrentBlock();
+		
+		foreach($answeringFequencies as $answerIndex => $answeringFrequency)
+		{
+			$tpl->setCurrentBlock('aggregaterow');
+			$tpl->setVariable('OPTION', $this->object->getAnswer($answerIndex)->getAnswerText());
+			$tpl->setVariable('COUNT', $answeringFrequency);
+			$tpl->parseCurrentBlock();
+		}
+		
+		return $tpl->get();
+	}
+	
+	protected function aggregateAnswers($givenSolutionRows, $existingAnswerOptions)
+	{
+		$answeringFequencies = array();
+		
+		foreach($existingAnswerOptions as $answerIndex => $answerOption)
+		{
+			$answeringFequencies[$answerIndex] = 0;
+		}
+		
+		foreach($givenSolutionRows as $solutionRow)
+		{
+			$answeringFequencies[$solutionRow['value1']]++;
+		}
+		
+		return $answeringFequencies;
+	}
 
 	/**
 	 * Returns an html string containing a question specific representation of the answers so far
@@ -937,6 +985,8 @@ class assImagemapQuestionGUI extends assQuestionGUI implements ilGuiQuestionScor
 	 */
 	public function getAggregatedAnswersView($relevant_answers)
 	{
-		return ''; //print_r($relevant_answers,true);
+		return $this->renderAggregateView(
+			$this->aggregateAnswers( $relevant_answers, $this->object->getAnswers() )
+		);
 	}
 }

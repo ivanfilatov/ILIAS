@@ -232,7 +232,15 @@ class assNumericGUI extends assQuestionGUI implements ilGuiQuestionScoringAdjust
 		//$feedback = ($show_feedback) ? $this->getAnswerFeedbackOutput($active_id, $pass) : ""; // Moving new method 
 																								 // due to deprecation.
 		$feedback = ($show_feedback && !$this->isTestPresentationContext()) ? $this->getGenericFeedbackOutput($active_id, $pass) : "";
-		if (strlen($feedback)) $solutiontemplate->setVariable("FEEDBACK", $this->object->prepareTextareaOutput( $feedback, true ));
+		if (strlen($feedback))
+		{
+			$cssClass = ( $this->hasCorrectSolution($active_id, $pass) ?
+				ilAssQuestionFeedback::CSS_CLASS_FEEDBACK_CORRECT : ilAssQuestionFeedback::CSS_CLASS_FEEDBACK_WRONG
+			);
+			
+			$solutiontemplate->setVariable("ILC_FB_CSS_CLASS", $cssClass);
+			$solutiontemplate->setVariable("FEEDBACK", $this->object->prepareTextareaOutput( $feedback, true ));
+		}
 		$solutiontemplate->setVariable("SOLUTION_OUTPUT", $questionoutput);
 
 		$solutionoutput = $solutiontemplate->get(); 
@@ -537,6 +545,14 @@ class assNumericGUI extends assQuestionGUI implements ilGuiQuestionScoringAdjust
 	{
 		$tpl = new ilTemplate('tpl.il_as_aggregated_answers_table.html', true, true, "Modules/TestQuestionPool");
 
+		$tpl->setCurrentBlock('headercell');
+		$tpl->setVariable('HEADER', $this->lng->txt('tst_answer_aggr_answer_header'));
+		$tpl->parseCurrentBlock();
+		
+		$tpl->setCurrentBlock('headercell');
+		$tpl->setVariable('HEADER', $this->lng->txt('tst_answer_aggr_frequency_header'));
+		$tpl->parseCurrentBlock();
+		
 		foreach ($aggregate as $key => $value)
 		{
 			$tpl->setCurrentBlock( 'aggregaterow' );

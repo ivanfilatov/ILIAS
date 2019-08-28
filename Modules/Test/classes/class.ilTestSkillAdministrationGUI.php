@@ -209,8 +209,13 @@ class ilTestSkillAdministrationGUI
 		{
 			return ilAssQuestionList::QUESTION_INSTANCE_TYPE_ORIGINALS;
 		}
-
-		return ilAssQuestionList::QUESTION_INSTANCE_TYPE_DUPLICATES;
+		
+		if( $this->testOBJ->isRandomTest() )
+		{
+			return ilAssQuestionList::QUESTION_INSTANCE_TYPE_DUPLICATES;
+		}
+		
+		return null;
 	}
 	
 	private function buildAssignmentConfigurationInPoolHintMessage()

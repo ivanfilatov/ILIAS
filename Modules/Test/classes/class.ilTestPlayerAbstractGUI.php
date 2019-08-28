@@ -320,21 +320,29 @@ abstract class ilTestPlayerAbstractGUI extends ilTestServiceGUI
 		$this->tpl->setVariable( "SPECIFIC_FEEDBACK",
 								 $question_gui->getSpecificFeedbackOutput(
 									 $this->testSession->getActiveId(),
-									 NULL
+									 $this->testSequence->getPass()
 								 )
 		);
 		$this->tpl->parseCurrentBlock();
 	}
 
-	protected function populateGenericFeedbackBlock($question_gui)
+	protected function populateGenericFeedbackBlock(assQuestionGUI $question_gui, $solutionCorrect)
 	{
-		$this->tpl->setCurrentBlock( "answer_feedback" );
-		$this->tpl->setVariable( "ANSWER_FEEDBACK",
-								 $question_gui->getAnswerFeedbackOutput( $this->testSession->getActiveId(),
-																		 NULL
-								 )
+		$feedback = $question_gui->getGenericFeedbackOutput(
+			$this->testSession->getActiveId(),$this->testSequence->getPass()
 		);
-		$this->tpl->parseCurrentBlock();
+		
+		if( strlen($feedback) )
+		{
+			$cssClass = ( $solutionCorrect ?
+				ilAssQuestionFeedback::CSS_CLASS_FEEDBACK_CORRECT : ilAssQuestionFeedback::CSS_CLASS_FEEDBACK_WRONG 
+			);
+			
+			$this->tpl->setCurrentBlock( "answer_feedback" );
+			$this->tpl->setVariable( "ANSWER_FEEDBACK", $feedback);
+			$this->tpl->setVariable( "ILC_FB_CSS_CLASS", $cssClass);
+			$this->tpl->parseCurrentBlock();
+		}
 	}
 
 	protected function populateScoreBlock($reachedPoints, $maxPoints)
@@ -2095,7 +2103,7 @@ abstract class ilTestPlayerAbstractGUI extends ilTestServiceGUI
 
 			// Notation of the params prior to getting rid of this crap in favor of a class
 			$solutionoutput = $questionGui->getSolutionOutput($this->testSession->getActiveId(),    #active_id
-				NULL,                                                #pass
+				$this->testSession->getPass(),                                                      #pass
 				FALSE,                                                #graphical_output
 				$show_question_inline_score,                        #result_output
 				FALSE,                                                #show_question_only
@@ -2106,17 +2114,19 @@ abstract class ilTestPlayerAbstractGUI extends ilTestServiceGUI
 			);
 			$this->populateSolutionBlock($solutionoutput);
 		}
-
+		
+		$reachedPoints = $questionGui->object->getAdjustedReachedPoints(
+			$this->testSession->getActiveId(), NULL, $authorizedSolution
+		);
+		
+		$maxPoints = $questionGui->object->getMaximumPoints();
+		
+		$solutionCorrect = ($reachedPoints == $maxPoints);
+		
 		// This controls if the score should be shown.
 		// It gets the parameter "Scoring and Results" -> "Instant Feedback" -> "Show Results (Only Points)"				
 		if($this->object->getAnswerFeedbackPoints())
 		{
-			$reachedPoints = $questionGui->object->getAdjustedReachedPoints(
-				$this->testSession->getActiveId(), NULL, $authorizedSolution
-			);
-			
-			$maxPoints = $questionGui->object->getMaximumPoints();
-
 			$this->populateScoreBlock($reachedPoints, $maxPoints);
 		}
 
@@ -2124,7 +2134,7 @@ abstract class ilTestPlayerAbstractGUI extends ilTestServiceGUI
 		// It gets the parameter "Scoring and Results" -> "Instant Feedback" -> "Show Solutions"				
 		if($this->object->getGenericAnswerFeedback())
 		{
-			$this->populateGenericFeedbackBlock($questionGui);
+			$this->populateGenericFeedbackBlock($questionGui, $solutionCorrect);
 		}
 
 		// This controls if the specific feedback should be shown.

@@ -49,8 +49,8 @@ class ilAttendanceList
 		$this->presets['eng_name'] = array("English name", true); // CHANGES IN CORE @author Ivan Filatov 05 aug 2015
 		$this->presets['login'] = array($lng->txt('login'), false);
 		$this->presets['phone_mobile'] = array($lng->txt('phone_mobile'), true); // CHANGES IN CORE @author Ivan Filatov 05 aug 2015
-		$this->presets['email'] = array($lng->txt('email'), true);	
-		
+		$this->presets['email'] = array($lng->txt('email'), true);
+
 		$lng->loadLanguageModule('crs');
 		
 		// roles
@@ -581,8 +581,8 @@ class ilAttendanceList
 									$value = ilObjUser::_lookupEmail($user_id);
 									break;
 								}
-								
-							
+
+
 							// CHANGES IN CORE @author Ivan Filatov 05 aug 2015
 							// mobile field add
 							case "phone_mobile":
@@ -591,8 +591,8 @@ class ilAttendanceList
 									$value = ilObjUser::_lookupFields($user_id)['phone_mobile'];
 									break;
 								}
-								
-								
+
+
 							// CHANGES IN CORE @author Ivan Filatov 05 aug 2015
 							// english name add
 							case "eng_name":
@@ -603,7 +603,7 @@ class ilAttendanceList
 									break;
 								}
 								
-							
+
 							case "login":
 								if(!$user_data[$id])
 								{

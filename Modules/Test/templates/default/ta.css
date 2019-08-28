@@ -294,25 +294,6 @@ div.last {
 	border-bottom: none;
 }
 
-ul.horizontal {
-	list-style: none; 
-	padding: 0; 
-	margin: 8px 0 0 0;
-}
-
-ul.horizontal li {
-	float: left; 
-	padding: 5px;
-	margin: 10px;
-	font-weight: bold;
-	border: 1px black solid;
-}
-
-ul.horizontal li a {
-	text-decoration: none;
-	color: #000;
-	padding: 2px;
-}
 
 table.imagemapareas tr,
 table.kvpwizard tr,
@@ -351,7 +332,6 @@ table.kprimchoicewizard th
     font-weight: bold;
     text-align: center;
 }
-table.ilAssKprimChoiceTable,
 table.kprimchoicewizard
 {
 }
@@ -363,22 +343,46 @@ table.kprimchoicewizard td
 {
     padding-top: 15px;
 }
-table.ilAssKprimChoiceTable th,
-table.ilAssKprimChoiceTable td
-{
-    padding: 5px 15px;
-}
-table.ilAssKprimChoiceTable th,
+div.ilAssKprimChoiceTable div.optionLabel,
 table.kprimchoicewizard th.optionLabel
 {
     background-color: lightgrey;
-    white-space: nowrap;
 }
-table.ilAssKprimChoiceTable td.kprimInput
+
+table.ilAssKprimChoiceTable tr.aggregaterow td
 {
-    text-align: center;
-    vertical-align: middle;
+	border-bottom: solid lightgrey 1px;
 }
+table.ilAssKprimChoiceTable tr.aggregaterow td.answer_frequency
+{
+	text-align: right;
+}
+table.il_tst_answer_aggregation
+{
+	border-collapse: collapse;
+}
+table.il_tst_answer_aggregation td,
+table.il_tst_answer_aggregation th
+{
+	padding: 5px 15px;
+}
+table.il_tst_answer_aggregation th
+{
+	background-color: lightgrey;
+}
+table.il_tst_answer_aggregation td
+{
+	border-bottom: solid lightgrey 1px;
+}
+table.il_tst_answer_aggregation td.answer_option
+{
+	font-style: italic;
+}
+table.il_tst_answer_aggregation td.answer_frequency
+{
+	text-align: right;
+}
+
 #tst_output {
 	clear: both;
 	overflow: hidden;
@@ -446,7 +450,7 @@ ul.shortlist li.listEntry a:hover
 	background-color: #ddd;
 }
 
-.sel {
+.ilc_qetitem_ErrorTextSelected {
 	background-color: #9bd9fe;
 	border: 1px #666 solid;
 }
@@ -577,8 +581,7 @@ p.ilAssKprimInstruction
     margin:5px 0 15px 0 !important;
 }
 
-table.kprimchoicewizard  th.optionLabel,
-table.ilAssKprimChoiceTable th.optionLabel
+table.kprimchoicewizard  th.optionLabel
 {
 	font-size: 1.1em;
 }

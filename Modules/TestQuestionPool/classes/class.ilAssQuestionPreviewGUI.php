@@ -269,6 +269,7 @@ class ilAssQuestionPreviewGUI
 		$this->questionGUI->object->setShuffler($this->getQuestionAnswerShuffler());
 		
 		$questionHtml = $this->questionGUI->getPreview(true, $this->isShowSpecificQuestionFeedbackRequired());
+		$this->questionGUI->magicAfterTestOutput();
 		
 		$pageGUI->setQuestionHTML(array($this->questionOBJ->getId() => $questionHtml));
 
@@ -301,7 +302,10 @@ class ilAssQuestionPreviewGUI
 
 		$this->questionGUI->setPreviewSession($this->previewSession);
 
-		$pageGUI->setQuestionHTML(array($this->questionOBJ->getId() => $this->questionGUI->getSolutionOutput(0)));
+		$pageGUI->setQuestionHTML(array($this->questionOBJ->getId() => $this->questionGUI->getSolutionOutput(
+			0, null, false, false, true, false,
+			true, false, false
+		)));
 
 		//$pageGUI->setHeader($this->questionOBJ->getTitle()); // NO ADDITIONAL HEADER
 		//$pageGUI->setPresentationTitle($this->questionOBJ->getTitle());
@@ -337,15 +341,21 @@ class ilAssQuestionPreviewGUI
 		if( $this->questionOBJ->isPreviewSolutionCorrect($this->previewSession) )
 		{
 			$feedback = $this->questionGUI->getGenericFeedbackOutputForCorrectSolution();
+			$cssClass = ilAssQuestionFeedback::CSS_CLASS_FEEDBACK_CORRECT;
 		}
 		else
 		{
 			$feedback = $this->questionGUI->getGenericFeedbackOutputForIncorrectSolution();
+			$cssClass = ilAssQuestionFeedback::CSS_CLASS_FEEDBACK_WRONG;
 		}
 		
-		$tpl->setCurrentBlock('instant_feedback_generic');
-		$tpl->setVariable('GENERIC_FEEDBACK', $feedback);
-		$tpl->parseCurrentBlock();
+		if( strlen($feedback) )
+		{
+			$tpl->setCurrentBlock('instant_feedback_generic');
+			$tpl->setVariable('GENERIC_FEEDBACK', $feedback);
+			$tpl->setVariable('ILC_FB_CSS_CLASS', $cssClass);
+			$tpl->parseCurrentBlock();
+		}
 	}
 
 	private function populateSpecificQuestionFeedback(ilTemplate $tpl)

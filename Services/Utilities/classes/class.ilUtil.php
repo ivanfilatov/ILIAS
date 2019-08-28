@@ -204,6 +204,8 @@ class ilUtil
 		{
 			$vers = str_replace(" ", "-", $ilias->getSetting("ilias_version"));
 			$vers = "?vers=".str_replace(".", "-", $vers);
+			$skin_version = ilStyleDefinition::getCurrentSkinVersion();
+			$vers .= ($skin_version != '' ? str_replace(".", "-", '-' . $skin_version) : '');
 		}
 		return $filename . $vers;
 	}
@@ -4149,16 +4151,14 @@ class ilUtil
 
 
 	/**
-	* move uploaded file
-	* 
-	* @static
-	* 
-	*/
+ 	 * move uploaded file
+	 * @return bool
+	 * @throws ilFileUtilsException
+	 */
 	public static function moveUploadedFile($a_file, $a_name, $a_target, $a_raise_errors = true,
 		$a_mode = "move_uploaded")
 	{
 		global $lng, $ilias;
-//echo "<br>ilUtli::moveuploadedFile($a_name)";
 
 		if (!is_file($a_file))
 		{
@@ -4197,6 +4197,8 @@ class ilUtil
 			{
 				ilUtil::sendInfo($vir[1], true);
 			}
+			include_once("./Services/Utilities/classes/class.ilFileUtils.php");
+			$a_target = ilFileUtils::getValidFilename($a_target);
 			switch ($a_mode)
 			{
 				case "rename":
@@ -4694,7 +4696,7 @@ class ilUtil
 	 */
 	public static function isHTML($a_text)
 	{
-		if( preg_match("/<[^>]*?>/", $a_text) )
+		if( strlen(strip_tags($a_text)) < strlen($a_text) )
 		{
 			return true;
 		}

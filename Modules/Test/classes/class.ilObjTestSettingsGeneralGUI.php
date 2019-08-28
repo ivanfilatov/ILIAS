@@ -810,8 +810,7 @@ class ilObjTestSettingsGeneralGUI extends ilTestSettingsGUI
 		$fixedparticipants->setValue(1);
 		$fixedparticipants->setChecked($this->testOBJ->getFixedParticipants());
 		$fixedparticipants->setInfo($this->lng->txt("participants_invitation_description"));
-		$invited_users = $this->testOBJ->getInvitedUsers();
-		if ($this->testOBJ->participantDataExist() && (count($invited_users) == 0))
+		if ($this->testOBJ->participantDataExist())
 		{
 			$fixedparticipants->setDisabled(true);
 		}
@@ -1372,11 +1371,6 @@ class ilObjTestSettingsGeneralGUI extends ilTestSettingsGUI
 		$enable_examview->setValue(1);
 		$enable_examview->setChecked($this->testOBJ->getEnableExamview());
 		$enable_examview->setInfo($this->lng->txt("enable_examview_desc"));
-		$show_examview_html = new ilCheckboxInputGUI('', 'show_examview_html');
-		$show_examview_html->setValue(1);
-		$show_examview_html->setChecked($this->testOBJ->getShowExamviewHtml());
-		$show_examview_html->setOptionTitle($this->lng->txt("show_examview_html"));
-		$enable_examview->addSubItem($show_examview_html);
 		$show_examview_pdf = new ilCheckboxInputGUI('', 'show_examview_pdf');
 		$show_examview_pdf->setValue(1);
 		$show_examview_pdf->setChecked($this->testOBJ->getShowExamviewPdf());
@@ -1455,7 +1449,6 @@ class ilObjTestSettingsGeneralGUI extends ilTestSettingsGUI
 		if( $this->formPropertyExists($form, 'enable_examview') )
 		{
 			$this->testOBJ->setEnableExamview($form->getItemByPostVar('enable_examview')->getChecked());
-			$this->testOBJ->setShowExamviewHtml($form->getItemByPostVar('show_examview_html')->getChecked());
 			$this->testOBJ->setShowExamviewPdf($form->getItemByPostVar('show_examview_pdf')->getChecked());
 		}
 

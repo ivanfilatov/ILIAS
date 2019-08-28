@@ -341,3 +341,112 @@ while ($rec = $ilDB->fetchAssoc($set))
 	$ilDB->manipulate($q);
 }
 ?>
+<#29>
+<?php
+    // fix 20409 and 20638
+    $old = 'http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML';
+    $new = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML';
+
+    $ilDB->manipulateF("UPDATE settings SET value=%s WHERE module='MathJax' AND keyword='path_to_mathjax' AND value=%s",
+        array('text','text'), array($new, $old)
+    );
+?>
+<#30>
+<?php
+if($ilDB->tableColumnExists('wiki_stat', 'del_pages'))
+{
+	$ilDB->modifyTableColumn('wiki_stat', 'del_pages', array(
+		'type' => 'integer',
+		'length' => 4,
+		'notnull' => true,
+		'default' => 0
+	));
+}
+?>
+<#31>
+<?php
+if($ilDB->tableColumnExists('wiki_stat', 'avg_rating'))
+{
+	$ilDB->modifyTableColumn('wiki_stat', 'avg_rating', array(
+		'type' => 'integer',
+		'length' => 4,
+		'notnull' => true,
+		'default' => 0
+	));
+}
+?>
+<#32>
+<?php
+
+$query = "
+	SELECT	qpl.question_id qid,
+			qpl.points qpl_points,
+			answ.points answ_points
+	
+	FROM qpl_questions qpl
+	
+	INNER JOIN qpl_qst_essay qst
+	ON qst.question_fi = qpl.question_id
+	
+	INNER JOIN qpl_a_essay answ
+	ON answ.question_fi = qst.question_fi
+	
+	WHERE qpl.question_id IN(
+	
+		SELECT keywords.question_fi
+	
+		FROM qpl_a_essay keywords
+	
+		INNER JOIN qpl_qst_essay question
+		ON question.question_fi = keywords.question_fi
+		AND question.keyword_relation = {$ilDB->quote('', 'text')}
+	
+		WHERE keywords.answertext = {$ilDB->quote('', 'text')}
+		GROUP BY keywords.question_fi
+		HAVING COUNT(keywords.question_fi) = {$ilDB->quote(1, 'integer')}
+		
+	)
+";
+
+$res = $ilDB->query($query);
+
+while( $row = $ilDB->fetchAssoc($res) )
+{
+	if( $row['answ_points'] > $row['qpl_points'] )
+	{
+		$ilDB->update('qpl_questions',
+			array('points' => array('float', $row['answ_points'])),
+			array('question_id' => array('integer', $row['qid']))
+		);
+	}
+	
+	$ilDB->manipulateF(
+		"DELETE FROM qpl_a_essay WHERE question_fi = %s",
+		array('integer'), array($row['qid'])
+	);
+	
+	$ilDB->update('qpl_qst_essay',
+		array('keyword_relation' => array('text', 'non')),
+		array('question_fi' => array('integer', $row['qid']))
+	);
+}
+
+?>
+<#33>
+<?php
+if($ilDB->tableExists('svy_answer'))
+{
+	if($ilDB->tableColumnExists('svy_answer','textanswer'))
+	{
+		$ilDB->modifyTableColumn('svy_answer', 'textanswer', array(
+			'type'	=> 'clob',
+			'notnull' => false
+		));
+	}
+}
+?>
+<#34>
+<?php
+require_once('./Services/Migration/DBUpdate_3560/classes/class.ilDBUpdateNewObjectType.php');
+ilDBUpdateNewObjectType::addRBACTemplate('orgu', 'il_orgu_employee', "OrgUnit Employee Role Template", null);
+?>

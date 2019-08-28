@@ -8059,6 +8059,17 @@ div.ilFrmPostHeader span.small {
   width: 80%;
   float: left;
 }
+@media only screen and (max-width: 767px) {
+  .ilFrmPostContentContainer {
+    width: 100%;
+  }
+}
+@media only screen and (max-width: 767px) {
+  .ilFrmPostContentContainer img {
+    width: 100%;
+    height: auto !important;
+  }
+}
 .ilFrmPostContent {
   margin-top: 20px;
 }
@@ -8513,6 +8524,20 @@ a.nostyle:hover {
 ul#ilAdvSelListTable_style_selection {
   overflow: auto;
   max-height: 400px;
+}
+div.ilc_answers.answer-table div.ilc_qanswer_Answer {
+  display: table-row;
+}
+div.ilc_answers.answer-table div.ilc_qanswer_Answer > div {
+  display: table-cell;
+}
+div.ilc_question_SingleChoice .answertext > p,
+div.ilc_question_MultipleChoice .answertext > p {
+  margin: 0 !important;
+}
+div.ilc_question_SingleChoice .ilc_qanswer_Answer > div:first-child,
+div.ilc_question_MultipleChoice .ilc_qanswer_Answer > div:first-child {
+  padding-right: 10px;
 }
 /* Services/Calendar */
 td.even {

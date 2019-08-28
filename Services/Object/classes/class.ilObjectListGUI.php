@@ -144,7 +144,7 @@ class ilObjectListGUI
 		$this->enableTags(false);
 		
 		// unique js-ids
-		$this->setParentRefId($_REQUEST["ref_id"]);
+		$this->setParentRefId((int) $_REQUEST["ref_id"]);
 		
 //echo "list";
 		$this->init();
@@ -3399,6 +3399,8 @@ class ilObjectListGUI
 	*/
 	function modifySAHSlaunch($a_link,$wtarget)
 	{
+		global $ilBrowser;
+
 		if (strstr($a_link, 'ilSAHSPresentationGUI') && !$this->offline_mode)
 		{
 			include_once 'Modules/ScormAicc/classes/class.ilObjSAHSLearningModule.php';
@@ -3407,7 +3409,7 @@ class ilObjectListGUI
 			$width = $sahs_obj->getWidth();
 			$height = $sahs_obj->getHeight();
 			if ( ($om == 5 || $om == 1) && $width > 0 && $height > 0) $om++;
-			if ($om != 0 && !ilBrowser::isMobile())
+			if ($om != 0 && !$ilBrowser->isMobile())
 			{
 				$this->default_command["frame"]="";
 				$a_link = "javascript:void(0); onclick=startSAHS('".$a_link."','".$wtarget."',".$om.",".$width.",".$height.");";
