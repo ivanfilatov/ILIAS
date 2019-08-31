@@ -887,7 +887,7 @@ class ilUserProfile
                     {
                         $custom_field->setInfo("English last name and first name, exactly as in foreign passport, e.g. 'Ivanov Ivan'");
                     }
-					$ti->setValidationRegexp('/^[a-zA-Z\-]{1,}(\ [a-zA-Z\-]{1,})?(\ [a-zA-Z\-]{1,})?$/');
+					$custom_field->setValidationRegexp('/^[a-zA-Z\-]{1,}(\ [a-zA-Z\-]{1,})?(\ [a-zA-Z\-]{1,})?$/');
                 }
                 // CHANGES IN CORE *end*
 
