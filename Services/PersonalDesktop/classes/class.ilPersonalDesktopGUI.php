@@ -548,6 +548,115 @@ class ilPersonalDesktopGUI
                 }
             }
         }
+		// accred 2020
+		/*
+		if (ilParticipants::_isParticipant(9537, $ilUser->getId()) || ilParticipants::_isParticipant(24922, $ilUser->getId()) || ilParticipants::_isParticipant(24928, $ilUser->getId())) {
+			$usr_accred =
+				"<div class=\"ilBlockHeader\"><img src=\"" . ilUtil::getImagePath("attention.png") . "\" height=\"15\" width=\"15\" style=\"display:inline;\" />&nbsp;<h3 class=\"ilBlockHeader\">Тестирование бакалавриата</h3></div>\n" .
+				"<div class=\"ilObjListRow\" style=\"padding: 5px;\">" .
+				"Уважаемые студенты 4 курса,<br/>\n" .
+				"<br/>\n" .
+				"Сегодня в рамках аккредитации бакалаврской программы МИЭФ в информационной системе вам необходимо пройти тестирование на уровень остаточных знаний по дисциплинам, изученным на 3 курсе.<br/>\n" .
+				"Проверочная работа является обязательной для всех и состоит из 5 тестов по следующим предметам:<br/>\n" .
+				"&raquo;&nbsp;<a href=\"https://icef-info.hse.ru/goto.php?target=tst_39044&client_id=icef\">Elements of Econometrics</a> (проходят все студенты)<br/>\n" .
+				"&raquo;&nbsp;<a href=\"https://icef-info.hse.ru/goto.php?target=tst_39066&client_id=icef\">Microeconomics 2</a> (проходят все студенты)<br/>\n" .
+				"&raquo;&nbsp;<a href=\"https://icef-info.hse.ru/goto.php?target=tst_39067&client_id=icef\">Macroeconomics 2</a> (проходят все студенты)<br/>\n" .
+				"&raquo;&nbsp;<a href=\"https://icef-info.hse.ru/goto.php?target=tst_39069&client_id=icef\">Principles of Banking and Finance</a> (проходят только изучавшие дисциплину студенты)<br/>\n" .
+				"&raquo;&nbsp;<a href=\"https://icef-info.hse.ru/goto.php?target=tst_39072&client_id=icef\">Sociology of Financial Behavior Test</a> (проходят только изучавшие дисциплину студенты)<br/>\n" .
+				"В каждом тесте по 10  вопросов. Все они являются обязательными. Результаты тестирования будут учитываться экспертами при вынесении решения о продлении аккредитации программы двух дипломов по экономике, поэтому мы очень рассчитываем на то, что ВСЕ студенты 4 курса примут в нём участие и покажут хороший результат. Тестирование завершится в 17.00<br/>\n" .
+				"Желаем Вас удачи!<br/>\n" .
+				"<br/>\n" .
+				"Ссылка на страницу с тестами: <a href=\"https://icef-info.hse.ru/goto_icef_fold_39068.html\">https://icef-info.hse.ru/goto_icef_fold_39068.html</a><br/>\n" .
+				"Примечание: в случае возникновения любых вопросов пишите на почту: skonyshev@hse.ru<br/>\n" .
+				"Обращаем вашем внимание на то, что после прохождения теста на экране появляется фраза «You have reached the maximum number of passes for this test. The test cannot be entered!» Пожалуйста, не обращайте на неё внимание и завершайте тест.\n" .
+				"</div>\n";
+			$this->tpl->setVariable("HEADCOL2_CONTENT", $usr_accred);
+		}
+        */
+
+		// info contacts
+		if ($ilClientIniFile->readVariable('pd_settings', 'contacts_block') === "1") {
+			switch ($lng->lang_key) {
+				case "ru":
+				{
+					$usr_contacts =
+						"<div class=\"ilBlockHeader\"><img src=\"" . ilUtil::getImagePath("attention.png") . "\" height=\"15\" width=\"15\" style=\"display:inline;\" />&nbsp;<h3 class=\"ilBlockHeader\">Contacts for urgent communication</h3></div>\n" .
+						"<table width=\"100%\">\n" .
+						"<tr class=\"ilObjListRow\" style=\"border-bottom: 1px solid #dcdcdc\">\n" .
+						"<td style=\"padding: 5px;\">Общие технические проблемы</td>\n" .
+						"<td style=\"padding: 5px;\">Котлов Андрей</td>\n" .
+						"<td style=\"padding: 5px;\">akotlov@hse.ru</td>\n" .
+						"</tr>\n" .
+						"<tr class=\"ilObjListRow\" style=\"border-bottom: 1px solid #dcdcdc\">\n" .
+						"<td style=\"padding: 5px;\">Технические проблемы с информ-системой</td>\n" .
+						"<td style=\"padding: 5px;\">Стороженко Вероника, Кононова Наталия</td>\n" .
+						"<td style=\"padding: 5px;\">vstorozhenko@hse.ru, nvkononova@hse.ru</td>\n" .
+						"</tr>\n" .
+						"<tr class=\"ilObjListRow\" style=\"border-bottom: 1px solid #dcdcdc\">\n" .
+						"<td style=\"padding: 5px;\">Методические вопросы интерактивного обучения</td>\n" .
+						"<td style=\"padding: 5px;\">Мяло Алина, Колядина Наталия</td>\n" .
+						"<td style=\"padding: 5px;\">amyalo@hse.ru, nkoliadina@hse.ru</td>\n" .
+						"</tr>\n" .
+						"<tr class=\"ilObjListRow\" style=\"border-bottom: 1px solid #dcdcdc\">\n" .
+						"<td style=\"padding: 5px;\">Программы курсов, компенсация Zoom</td>\n" .
+						"<td style=\"padding: 5px;\">Царева Александра</td>\n" .
+						"<td style=\"padding: 5px;\">atsareva@hse.ru</td>\n" .
+						"</tr>\n" .
+						"<tr class=\"ilObjListRow\" style=\"border-bottom: 1px solid #dcdcdc\">\n" .
+						"<td style=\"padding: 5px;\">Вопросы по учебному процессу</td>\n" .
+						"<td style=\"padding: 5px;\">Конышев Сергей, Архипова Наталья, Костина Алла Михайловна</td>\n" .
+						"<td style=\"padding: 5px;\">skonyshev@hse.ru, narkhipova@hse.ru, akostina@hse.ru</td>\n" .
+						"</tr>\n" .
+						"<tr class=\"ilObjListRow\" style=\"border-bottom: 1px solid #dcdcdc\">\n" .
+						"<td style=\"padding: 5px;\">Оперативная связь для студентов</td>\n" .
+						"<td style=\"padding: 5px;\">Мяло Алина, Стороженко Вероника, Кононова Наталия</td>\n" .
+						"<td style=\"padding: 5px;\">amyalo@hse.ru, vstorozhenko@hse.ru, nvkononova@hse.ru</td>\n" .
+						"</tr>\n" .
+						"</table>";
+					break;
+				}
+				case "en":
+				default:
+				{
+					$usr_contacts =
+						"<div class=\"ilBlockHeader\"><img src=\"" . ilUtil::getImagePath("attention.png") . "\" height=\"15\" width=\"15\" style=\"display:inline;\" />&nbsp;<h3 class=\"ilBlockHeader\">Contacts for urgent communication</h3></div>\n" .
+						"<table width=\"100%\">\n" . 
+						"<tr class=\"ilObjListRow\" style=\"border-bottom: 1px solid #dcdcdc\">\n" .
+						"<td style=\"padding: 5px;\">General technical issues</td>\n" .
+						"<td style=\"padding: 5px;\">Kotlov Andrei</td>\n" .
+						"<td style=\"padding: 5px;\">akotlov@hse.ru</td>\n" .
+						"</tr>\n" .
+						"<tr class=\"ilObjListRow\" style=\"border-bottom: 1px solid #dcdcdc\">\n" .
+						"<td style=\"padding: 5px;\">Technical issues with icef-info</td>\n" .
+						"<td style=\"padding: 5px;\">Storozhenko Veronika, Kononova Natalia</td>\n" .
+						"<td style=\"padding: 5px;\">vstorozhenko@hse.ru, nvkononova@hse.ru</td>\n" .
+						"</tr>\n" .
+						"<tr class=\"ilObjListRow\" style=\"border-bottom: 1px solid #dcdcdc\">\n" .
+						"<td style=\"padding: 5px;\">Methodical questions</td>\n" .
+						"<td style=\"padding: 5px;\">Myalo Alina, Kolyadina Natalia</td>\n" .
+						"<td style=\"padding: 5px;\">amyalo@hse.ru, nkoliadina@hse.ru</td>\n" .
+						"</tr>\n" .
+						"<tr class=\"ilObjListRow\" style=\"border-bottom: 1px solid #dcdcdc\">\n" .
+						"<td style=\"padding: 5px;\">Course programs, Zoom compensations</td>\n" .
+						"<td style=\"padding: 5px;\">Tsareva Aleksandra</td>\n" .
+						"<td style=\"padding: 5px;\">atsareva@hse.ru</td>\n" .
+						"</tr>\n" .
+						"<tr class=\"ilObjListRow\" style=\"border-bottom: 1px solid #dcdcdc\">\n" .
+						"<td style=\"padding: 5px;\">Study process questions</td>\n" .
+						"<td style=\"padding: 5px;\">Konyshev Sergei, Arkhipova Natalya, Kostina Alla</td>\n" .
+						"<td style=\"padding: 5px;\">skonyshev@hse.ru, narkhipova@hse.ru, akostina@hse.ru</td>\n" .
+						"</tr>\n" .
+						"<tr class=\"ilObjListRow\" style=\"border-bottom: 1px solid #dcdcdc\">\n" .
+						"<td style=\"padding: 5px;\">Urgent questions from students</td>\n" .
+						"<td style=\"padding: 5px;\">Myalo Alina, Storozhenko Veronika, Kononova Natalia</td>\n" .
+						"<td style=\"padding: 5px;\">amyalo@hse.ru, vstorozhenko@hse.ru, nvkononova@hse.ru</td>\n" .
+						"</tr>\n" . 
+						"</table>";
+					break;
+				}
+			}
+			$this->tpl->setVariable("HEADCOL2_CONTENT", $usr_contacts);
+		}
 
         // CHANGES IN CORE *end*
 
