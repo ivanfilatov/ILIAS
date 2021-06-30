@@ -22,6 +22,10 @@ class ilBookingObjectGUI
 	 */
 	function __construct($a_parent_obj)
 	{
+	    global $ilAccess;
+
+	    $this->access = $ilAccess;
+
 		$this->ref_id = $a_parent_obj->ref_id;
 		$this->pool_id = $a_parent_obj->object->getId();		
 		$this->pool_has_schedule = 
@@ -98,7 +102,12 @@ class ilBookingObjectGUI
 	function create(ilPropertyFormGUI $a_form = null)
 	{
 		global $ilCtrl, $tpl, $lng, $ilTabs;
-		
+
+        if (!$this->access->checkAccess('write', '', $this->ref_id)) {
+            return;
+        }
+
+
 		$ilTabs->clearTargets();
 		$ilTabs->setBackTarget($lng->txt('book_back_to_list'), $ilCtrl->getLinkTarget($this, 'render'));
 
@@ -117,6 +126,10 @@ class ilBookingObjectGUI
 	function edit(ilPropertyFormGUI $a_form = null)
     {
 		global $tpl, $ilCtrl, $ilTabs, $lng;
+
+        if (!$this->access->checkAccess('write', '', $this->ref_id)) {
+            return;
+        }
 
 		$ilTabs->clearTargets();
 		$ilTabs->setBackTarget($lng->txt('book_back_to_list'), $ilCtrl->getLinkTarget($this, 'render'));
@@ -254,6 +267,10 @@ class ilBookingObjectGUI
 	{
 		global $ilCtrl, $lng;
 
+        if (!$this->access->checkAccess('write', '', $this->ref_id)) {
+            return;
+        }
+
 		$form = $this->initForm();
 		if($form->checkInput())
 		{
@@ -324,6 +341,10 @@ class ilBookingObjectGUI
 	{
 		global $lng, $ilCtrl;
 
+        if (!$this->access->checkAccess('write', '', $this->ref_id)) {
+            return;
+        }
+
 		$form = $this->initForm('edit', (int)$_POST['object_id']);
 		if($form->checkInput())
 		{
@@ -390,7 +411,11 @@ class ilBookingObjectGUI
 	function confirmDelete()
 	{
 		global $ilCtrl, $lng, $tpl, $ilTabs;
-		
+        if (!$this->access->checkAccess('write', '', $this->ref_id)) {
+            return;
+        }
+
+
 		$ilTabs->clearTargets();
 		$ilTabs->setBackTarget($lng->txt('book_back_to_list'), $ilCtrl->getLinkTarget($this, 'render'));
 
@@ -414,6 +439,10 @@ class ilBookingObjectGUI
 	function delete()
 	{
 		global $ilCtrl, $lng;
+
+        if (!$this->access->checkAccess('write', '', $this->ref_id)) {
+            return;
+        }
 
 		include_once 'Modules/BookingManager/classes/class.ilBookingObject.php';
 		$obj = new ilBookingObject((int)$_POST['object_id']);

@@ -34,8 +34,10 @@ class ilObjBookingPoolGUI extends ilObjectGUI
 	}
 
 	/**
-	 * main switch
-	 */
+     * @return bool
+     * @throws ilCtrlException
+     * @throws ilObjectException
+     */
 	function executeCommand()
 	{
 		global $tpl, $ilTabs, $ilNavigationHistory, $ilUser;
@@ -69,6 +71,7 @@ class ilObjBookingPoolGUI extends ilObjectGUI
 		switch($next_class)
 		{
 			case 'ilpermissiongui':
+                $this->checkPermission('edit_permission');
 				$this->tabs_gui->setTabActive('perm_settings');
 				include_once("Services/AccessControl/classes/class.ilPermissionGUI.php");
 				$perm_gui = new ilPermissionGUI($this);
@@ -76,6 +79,10 @@ class ilObjBookingPoolGUI extends ilObjectGUI
 				break;
 
 			case 'ilbookingobjectgui':
+			    if (!$this->checkPermissionBool('read') && $this->checkPermissionBool('visible')) {
+                    $this->ctrl->redirect($this, "infoScreen");
+                }
+                $this->checkPermission('read');
 				$this->tabs_gui->setTabActive('render');
 				include_once("Modules/BookingManager/classes/class.ilBookingObjectGUI.php");
 				$object_gui = new ilBookingObjectGUI($this);
@@ -83,6 +90,7 @@ class ilObjBookingPoolGUI extends ilObjectGUI
 				break;
 
 			case 'ilbookingschedulegui':
+                $this->checkPermission('write');
 				$this->tabs_gui->setTabActive('schedules');
 				include_once("Modules/BookingManager/classes/class.ilBookingScheduleGUI.php");
 				$schedule_gui = new ilBookingScheduleGUI($this);
@@ -90,6 +98,7 @@ class ilObjBookingPoolGUI extends ilObjectGUI
 				break;
 
 			case 'ilpublicuserprofilegui':
+                $this->checkPermission('read');
 				$ilTabs->clearTargets();
 				include_once("Services/User/classes/class.ilPublicUserProfileGUI.php");
 				$profile = new ilPublicUserProfileGUI((int)$_GET["user_id"]);
@@ -99,16 +108,19 @@ class ilObjBookingPoolGUI extends ilObjectGUI
 				break;
 
 			case 'ilinfoscreengui':
+                $this->checkPermission('visible');
 				$this->infoScreen();
 				break;
 			
 			case "ilcommonactiondispatchergui":
+                $this->checkPermission('read');
 				include_once("Services/Object/classes/class.ilCommonActionDispatcherGUI.php");
 				$gui = ilCommonActionDispatcherGUI::getInstanceFromAjaxCall();
 				$this->ctrl->forwardCommand($gui);
 				break;
 			
 			case "ilobjectcopygui":
+                $this->checkPermission('copy');
 				include_once "./Services/Object/classes/class.ilObjectCopyGUI.php";
 				$cp = new ilObjectCopyGUI($this);
 				$cp->setType("book");
@@ -116,7 +128,7 @@ class ilObjBookingPoolGUI extends ilObjectGUI
 				break;
 			
 			case 'ilobjectmetadatagui';
-				$this->checkPermissionBool('write');				
+				$this->checkPermission('write');
 				$this->tabs_gui->setTabActive('meta_data');
 				include_once 'Services/Object/classes/class.ilObjectMetaDataGUI.php';
 				$md_gui = new ilObjectMetaDataGUI($this->object, 'bobj');	
@@ -124,6 +136,9 @@ class ilObjBookingPoolGUI extends ilObjectGUI
 				break;
 			
 			default:
+			    if (!in_array($cmd, ["create", "save", "infoScreen"])) {
+                    $this->checkPermission('read');
+                }
 				$cmd = $this->ctrl->getCmd();
 				$cmd .= 'Object';
 				$this->$cmd();
