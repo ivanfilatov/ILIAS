@@ -15,7 +15,7 @@ header('Content-Type: application/json');
 /*
  * Modify the following variables to match your ILIAS environment
  */
-$ilias_base_url = "http://icef-info.hse.ru/";   // this your base ILIAS url, you should use https in productive environments
+$ilias_base_url = "http://127.0.0.1/";   // this your base ILIAS url, you should use https in productive environments
 $ilias_client = "icef";                                 // the client ID (see ILIAS setup) of your ILIAS client
 $command = $_POST['command'];
 $outputData = [];
